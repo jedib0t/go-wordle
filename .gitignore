@@ -1,0 +1,4 @@
+*.swp
+.coverprofile
+/.idea/
+/go-wordle*
