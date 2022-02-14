@@ -39,35 +39,17 @@ func (w *wordle) Answer() string {
 }
 
 func (w *wordle) Attempt(word string) (*Attempt, error) {
-	if w.solved {
-		return nil, fmt.Errorf("the last attempt succeeded; no more attempts allowed")
-	}
-	if len(w.attempts) >= w.maxAttempts {
-		return nil, fmt.Errorf("attempted %d times; no more attempts allowed", w.maxAttempts)
-	}
-	if len(word) != len(w.answer) {
-		return nil, fmt.Errorf("word length [%d] does not match answer length [%d]", len(word), len(w.answer))
-	}
-	for _, attempt := range w.attempts {
-		if word == attempt.Answer {
-			return nil, fmt.Errorf("word [%s] has been attempted already", word)
-		}
-	}
-	notFound := true
-	for _, dictWord := range *w.dictionary {
-		if dictWord == word {
-			notFound = false
-			break
-		}
-	}
-	if notFound {
-		return nil, fmt.Errorf("not a valid word: '%s'", word)
+	if err := w.validateAttempt(word); err != nil {
+		return nil, err
 	}
 
+	// prep to record a new attempt
 	attempt := Attempt{
 		Answer: word,
+		// default to NotPresent status for all characters
 		Result: make([]CharacterStatus, len(word)),
 	}
+	// loop through the word one character at a time
 	for idx := range word {
 		if word[idx] == w.answer[idx] {
 			attempt.Result[idx] = PresentInCorrectLocation
@@ -88,7 +70,9 @@ func (w *wordle) Attempt(word string) (*Attempt, error) {
 			}
 		}
 	}
+	// record the new attempt
 	w.attempts = append(w.attempts, attempt)
+	// mark as solved if so
 	if attempt.Answer == w.answer {
 		w.solved = true
 	}
@@ -126,5 +110,33 @@ func (w *wordle) init() error {
 	w.attempts = make([]Attempt, 0, w.maxAttempts)
 	w.solved = false
 
+	return nil
+}
+
+func (w *wordle) validateAttempt(word string) error {
+	if w.solved {
+		return fmt.Errorf("the last attempt succeeded; no more attempts allowed")
+	}
+	if len(w.attempts) >= w.maxAttempts {
+		return fmt.Errorf("attempted %d times; no more attempts allowed", w.maxAttempts)
+	}
+	if len(word) != len(w.answer) {
+		return fmt.Errorf("word length [%d] does not match answer length [%d]", len(word), len(w.answer))
+	}
+	for _, attempt := range w.attempts {
+		if word == attempt.Answer {
+			return fmt.Errorf("word [%s] has been attempted already", word)
+		}
+	}
+	notFound := true
+	for _, dictWord := range *w.dictionary {
+		if dictWord == word {
+			notFound = false
+			break
+		}
+	}
+	if notFound {
+		return fmt.Errorf("not a valid word: '%s'", word)
+	}
 	return nil
 }
