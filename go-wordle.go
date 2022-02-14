@@ -16,10 +16,10 @@ import (
 
 var (
 	flagAnswer      = flag.String("answer", "", "Pre-set answer if you don't want a random word")
-	flagMaxAttempts = flag.Int("max-attempts", 5, "Maximum Attempts Allowed")
-	flagMaxLength   = flag.Int("max-length", 5, "Maximum Word Length")
-	flagMinLength   = flag.Int("min-length", 5, "Minimum Word Length")
-	flagSolve       = flag.Bool("solve", false, "Solve?")
+	flagMaxAttempts = flag.Int("max-attempts", 6, "Maximum attempts allowed")
+	flagMaxLength   = flag.Int("max-length", 5, "Maximum word length")
+	flagMinLength   = flag.Int("min-length", 5, "Minimum word length")
+	flagSolve       = flag.Bool("solve", false, "Help Solve?")
 
 	colorsSpecial           = [3]text.Color{text.FgBlack, text.BgBlack, text.FgHiYellow}
 	colorsUnknown           = [3]text.Color{text.FgHiBlack, text.BgHiBlack, text.FgHiWhite}
@@ -111,7 +111,7 @@ func render(w wordle.Wordle, currAttempt wordle.Attempt) {
 	}
 
 	tw := table.NewWriter()
-	tw.AppendHeader(table.Row{"░▒▓  WORDLE  ▓▒░"})
+	tw.AppendHeader(table.Row{"░ ▒ ▓  W O R D L E  ▓ ▒ ░"})
 	tw.AppendRow(table.Row{renderWordle(w, currAttempt)})
 	tw.AppendFooter(table.Row{renderKeyboard(w)})
 	tw.SetColumnConfigs([]table.ColumnConfig{
