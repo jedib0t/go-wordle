@@ -47,6 +47,11 @@ func (w *wordle) Attempt(word string) (*Attempt, error) {
 	if len(word) != len(w.answer) {
 		return nil, fmt.Errorf("word length [%d] does not match answer length [%d]", len(word), len(w.answer))
 	}
+	for _, attempt := range w.attempts {
+		if word == attempt.Answer {
+			return nil, fmt.Errorf("word [%s] has been attempted already", word)
+		}
+	}
 	notFound := true
 	for _, dictWord := range *w.dictionary {
 		if dictWord == word {

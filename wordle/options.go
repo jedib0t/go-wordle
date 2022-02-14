@@ -10,10 +10,10 @@ var (
 	defaultOpts = []Option{
 		WithDictionary(&wordsEnglish),
 		WithMaxAttempts(5),
-		WithWordFilters([]Filter{
+		WithWordFilters(
 			WithLength(5, 5),
 			WithNoRepeatingCharacters(),
-		}),
+		),
 	}
 )
 
@@ -41,7 +41,7 @@ func WithMaxAttempts(n int) Option {
 	}
 }
 
-func WithWordFilters(filters []Filter) Option {
+func WithWordFilters(filters ...Filter) Option {
 	return func(w *wordle) {
 		w.wordFilters = filters
 	}
