@@ -16,10 +16,11 @@ import (
 
 var (
 	flagAnswer      = flag.String("answer", "", "Pre-set answer if you don't want a random word")
+	flagAttempts    = flag.String("attempts", "", "Words to attempt before prompting user")
+	flagHelp        = flag.Bool("help", false, "Show this help-text?")
 	flagMaxAttempts = flag.Int("max-attempts", 6, "Maximum attempts allowed")
 	flagMaxLength   = flag.Int("max-length", 5, "Maximum word length")
 	flagMinLength   = flag.Int("min-length", 5, "Minimum word length")
-	flagSolve       = flag.Bool("solve", false, "Help Solve?")
 
 	colorsSpecial           = [3]text.Color{text.FgBlack, text.BgBlack, text.FgHiYellow}
 	colorsUnknown           = [3]text.Color{text.FgHiBlack, text.BgHiBlack, text.FgHiWhite}
@@ -32,6 +33,9 @@ var (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	flag.Parse()
+	if *flagHelp {
+		printHelp()
+	}
 	if *flagMinLength > *flagMaxLength {
 		logErrorAndExit("min-length [%d] > max-length [%d]", *flagMinLength, *flagMaxLength)
 	}
@@ -65,7 +69,17 @@ func logErrorAndExit(msg string, a ...interface{}) {
 	os.Exit(-1)
 }
 
+func printHelp() {
+	fmt.Println(`go-wordle: A GoLang implementation of the Wordle game.
+
+Flags
+=====`)
+	flag.PrintDefaults()
+	os.Exit(0)
+}
+
 func prompt(w wordle.Wordle) {
+	cliAttempts := strings.Split(*flagAttempts, ",")
 	var currAttempt wordle.Attempt
 	for {
 		render(w, currAttempt)
@@ -77,6 +91,14 @@ func prompt(w wordle.Wordle) {
 			break
 		}
 
+		// if user provided words to attempt, do that first
+		if len(cliAttempts) > 0 {
+			_, _ = w.Attempt(cliAttempts[0])
+			cliAttempts = cliAttempts[1:]
+			continue
+		}
+
+		// prompt the user for input
 		char, key, err := keyboard.GetSingleKey()
 		if err != nil {
 			logErrorAndExit("failed to get input: %v", err)
@@ -170,13 +192,13 @@ func renderWordle(w wordle.Wordle, currAttempt wordle.Attempt) string {
 			attempt = currAttempt
 		}
 
-		tw.AppendRow(table.Row{renderWordleAttempt(w, attempt)})
+		tw.AppendRow(table.Row{renderWordleAttempt(attempt)})
 	}
 	tw.Style().Options = table.OptionsNoBordersAndSeparators
 	return tw.Render()
 }
 
-func renderWordleAttempt(w wordle.Wordle, attempt wordle.Attempt) string {
+func renderWordleAttempt(attempt wordle.Attempt) string {
 	tw := table.NewWriter()
 	twAttemptRow := table.Row{}
 	for idx := 0; idx < *flagMaxLength; idx++ {
@@ -210,8 +232,4 @@ func renderKey(key string, colors [3]text.Color) string {
 		colors[1].Sprintf(" %s ", colors[2].Sprint(key)),
 		colors[0].Sprint(strings.Repeat("▀", len(key)+2)),
 	)
-}
-
-func solve() {
-
 }
