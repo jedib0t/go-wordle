@@ -6,7 +6,9 @@ A golang implementation of the popular New York Times game [Wordle](https://www.
 
 <img src="go-wordle.png"/>
 
-Note:
+## Usage:
+* `go run .`
 * Press `Esc` or `Ctrl+C` to quit
 * Type the word and `Enter` to attempt it
 * Requires an interactive terminal
+
