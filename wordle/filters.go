@@ -4,6 +4,7 @@ package wordle
 // words that do not qualify.
 type Filter func(word string) bool
 
+// WithLength helps filter the words by min/max lengths.
 func WithLength(min, max int) Filter {
 	return func(word string) bool {
 		if len(word) < min || len(word) > max {
@@ -13,6 +14,7 @@ func WithLength(min, max int) Filter {
 	}
 }
 
+// WithNoRepeatingCharacters prevents words from having repeated characters.
 func WithNoRepeatingCharacters() Filter {
 	return func(word string) bool {
 		runeCount := make(map[rune]int, len(word))

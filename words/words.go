@@ -1,7 +1,7 @@
 package words
 
 import (
-	_ "embed"
+	_ "embed" // for embedding dictionary files
 	"fmt"
 	"sort"
 	"strings"

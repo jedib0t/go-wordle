@@ -17,6 +17,7 @@ type wordle struct {
 	wordsAllowed []string
 }
 
+// New generates a new Wordle game with a randomly selected word.
 func New(opts ...Option) (Wordle, error) {
 	w := &wordle{}
 	w.options = append(defaultOpts, opts...)

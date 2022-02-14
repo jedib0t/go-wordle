@@ -1,5 +1,6 @@
 package wordle
 
+// Wordle defines methods to interact with a Wordle game.
 type Wordle interface {
 	Alphabets() map[string]CharacterStatus
 	Answer() string
