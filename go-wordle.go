@@ -155,15 +155,15 @@ func renderKeyboard(w wordle.Wordle) string {
 	tw := table.NewWriter()
 	alphabets := w.Alphabets()
 
-	for _, legend := range []string{"qwertyuiop", "asdfghjkl", "zxcvbnm"} {
+	for _, legend := range []string{"QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"} {
 		twRow := table.NewWriter()
 		row := table.Row{}
-		if legend == "zxcvbnm" {
+		if legend == "ZXCVBNM" {
 			row = append(row, renderKey("ENTER", colorsSpecial))
 		}
 		for _, ch := range legend {
 			char := string(ch)
-			charStatus := alphabets[char]
+			charStatus := alphabets[strings.ToLower(char)]
 			colors := colorsUnknown
 			switch charStatus {
 			case wordle.PresentInCorrectLocation:
@@ -176,7 +176,7 @@ func renderKeyboard(w wordle.Wordle) string {
 
 			row = append(row, renderKey(char, colors))
 		}
-		if legend == "zxcvbnm" {
+		if legend == "ZXCVBNM" {
 			row = append(row, renderKey("BKSP", colorsSpecial))
 		}
 		twRow.AppendRow(row)
