@@ -22,6 +22,7 @@ var (
 	flagMaxLength   = flag.Int("max-length", 5, "Maximum word length")
 	flagMinLength   = flag.Int("min-length", 5, "Minimum word length")
 
+	colorHints              = text.Colors{text.FgHiBlack, text.Italic}
 	colorsSpecial           = [3]text.Color{text.FgBlack, text.BgBlack, text.FgHiYellow}
 	colorsUnknown           = [3]text.Color{text.FgHiBlack, text.BgHiBlack, text.FgHiWhite}
 	colorsNotPresent        = [3]text.Color{text.FgBlack, text.BgBlack, text.FgHiBlack}
@@ -87,7 +88,7 @@ func prompt(w wordle.Wordle) {
 			break
 		}
 		if len(w.Attempts()) == *flagMaxAttempts {
-			fmt.Printf("Answer: %#v\n", w.Answer())
+			fmt.Printf("Answer: '%v'\n", strings.ToUpper(w.Answer()))
 			break
 		}
 
@@ -106,6 +107,8 @@ func prompt(w wordle.Wordle) {
 		switch key {
 		case keyboard.KeyEsc, keyboard.KeyCtrlC:
 			os.Exit(0)
+		case keyboard.KeyCtrlR:
+			_ = w.Reset()
 		case keyboard.KeyBackspace, keyboard.KeyBackspace2:
 			if len(currAttempt.Answer) > 0 {
 				currAttempt.Answer = currAttempt.Answer[:len(currAttempt.Answer)-1]
@@ -136,10 +139,13 @@ func render(w wordle.Wordle, currAttempt wordle.Attempt) {
 	tw.AppendHeader(table.Row{"░ ▒ ▓  W O R D L E  ▓ ▒ ░"})
 	tw.AppendRow(table.Row{renderWordle(w, currAttempt)})
 	tw.AppendFooter(table.Row{renderKeyboard(w)})
+	tw.AppendSeparator()
+	tw.AppendFooter(table.Row{colorHints.Sprint("[escape/ctrl+c to quit] [ctrl+r to restart]")})
 	tw.SetColumnConfigs([]table.ColumnConfig{
 		{Number: 1, Align: text.AlignCenter, AlignHeader: text.AlignCenter, AlignFooter: text.AlignCenter},
 	})
 	tw.SetStyle(table.StyleBold)
+	tw.Style().Format.Footer = text.FormatDefault
 	out := tw.Render()
 	linesRendered = strings.Count(out, "\n") + 1
 	fmt.Println(out)
