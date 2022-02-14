@@ -40,7 +40,7 @@ func prompt() {
 
 	for _, word := range []string{"adieu", "disco", "zombi", "robin"} {
 		attempt, err := w.Attempt(word)
-		fmt.Printf("%v, %v, %v\n", attempt, err, w.Solved())
+		fmt.Printf("%v, %v, %v, %v\n", attempt, err, w.Solved(), w.Alphabets())
 	}
 }
 

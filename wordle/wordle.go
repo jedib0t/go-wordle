@@ -6,7 +6,7 @@ import (
 )
 
 type wordle struct {
-	alphabets    map[rune]CharacterStatus
+	alphabets    map[string]CharacterStatus
 	answer       string
 	attempts     []Attempt
 	dictionary   *[]string
@@ -29,7 +29,7 @@ func New(opts ...Option) (Wordle, error) {
 	return w, nil
 }
 
-func (w *wordle) Alphabets() map[rune]CharacterStatus {
+func (w *wordle) Alphabets() map[string]CharacterStatus {
 	return w.alphabets
 }
 
@@ -65,15 +65,20 @@ func (w *wordle) Attempt(word string) (*Attempt, error) {
 	for idx := range word {
 		if word[idx] == w.answer[idx] {
 			attempt.Result[idx] = PresentInCorrectLocation
-			w.alphabets[rune(word[idx])] = PresentInCorrectLocation
+			w.alphabets[string(word[idx])] = PresentInCorrectLocation
 		} else {
+			charNotFound := true
 			for answerIdx := range w.answer {
 				if word[idx] == w.answer[answerIdx] {
 					attempt.Result[idx] = PresentInWrongLocation
-					if w.alphabets[rune(word[idx])] < PresentInWrongLocation {
-						w.alphabets[rune(word[idx])] = PresentInWrongLocation
+					if w.alphabets[string(word[idx])] < PresentInWrongLocation {
+						w.alphabets[string(word[idx])] = PresentInWrongLocation
 					}
+					charNotFound = false
 				}
+			}
+			if charNotFound {
+				delete(w.alphabets, string(word[idx]))
 			}
 		}
 	}
@@ -105,9 +110,9 @@ func (w *wordle) init() error {
 		return fmt.Errorf("found no words to choose from after applying all filters")
 	}
 
-	w.alphabets = make(map[rune]CharacterStatus, 26)
+	w.alphabets = make(map[string]CharacterStatus, 26)
 	for _, r := range "abcdefghijklmnopqrstuvwxyz" {
-		w.alphabets[r] = Unknown
+		w.alphabets[string(r)] = Unknown
 	}
 	if w.answer == "" {
 		w.answer = w.wordsAllowed[rand.Intn(len(w.wordsAllowed))]

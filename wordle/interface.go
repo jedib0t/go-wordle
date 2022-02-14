@@ -1,7 +1,7 @@
 package wordle
 
 type Wordle interface {
-	Alphabets() map[rune]CharacterStatus
+	Alphabets() map[string]CharacterStatus
 	Answer() string
 	Attempt(word string) (*Attempt, error)
 	Attempts() []Attempt
