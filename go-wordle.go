@@ -21,6 +21,7 @@ var (
 	flagMaxAttempts = flag.Int("max-attempts", 6, "Maximum attempts allowed")
 	flagMaxLength   = flag.Int("max-length", 5, "Maximum word length")
 	flagMinLength   = flag.Int("min-length", 5, "Minimum word length")
+	flagNoKeyboard  = flag.Bool("no-keyboard", false, "Do not show the Keyboard?")
 
 	colorHints              = text.Colors{text.FgHiBlack, text.Italic}
 	colorsSpecial           = [3]text.Color{text.FgBlack, text.BgBlack, text.FgHiYellow}
@@ -138,8 +139,10 @@ func render(w wordle.Wordle, currAttempt wordle.Attempt) {
 	tw := table.NewWriter()
 	tw.AppendHeader(table.Row{"░ ▒ ▓  W O R D L E  ▓ ▒ ░"})
 	tw.AppendRow(table.Row{renderWordle(w, currAttempt)})
-	tw.AppendFooter(table.Row{renderKeyboard(w)})
-	tw.AppendSeparator()
+	if !*flagNoKeyboard {
+		tw.AppendFooter(table.Row{renderKeyboard(w)})
+		tw.AppendSeparator()
+	}
 	tw.AppendFooter(table.Row{colorHints.Sprint("[escape/ctrl+c to quit] [ctrl+r to restart]")})
 	tw.SetColumnConfigs([]table.ColumnConfig{
 		{Number: 1, Align: text.AlignCenter, AlignHeader: text.AlignCenter, AlignFooter: text.AlignCenter},
