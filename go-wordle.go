@@ -23,9 +23,8 @@ var (
 	flagHelp          = flag.Bool("help", false, "Show this help-text?")
 	flagHints         = flag.Bool("hints", false, "Show hints and help solve?")
 	flagMaxAttempts   = flag.Int("max-attempts", 6, "Maximum attempts allowed")
-	flagMaxLength     = flag.Int("max-length", 5, "Maximum word length")
-	flagMinLength     = flag.Int("min-length", 5, "Minimum word length")
 	flagSolveExternal = flag.Bool("solve-external", false, "Solve Wordle puzzle from elsewhere?")
+	flagWordLength    = flag.Int("word-length", 5, "Number of characters in the Word")
 
 	colorHints              = text.Colors{text.FgHiBlack, text.Italic}
 	colorsSpecial           = [3]text.Color{text.FgBlack, text.BgBlack, text.FgHiYellow}
@@ -44,7 +43,7 @@ func main() {
 	defer exitHandler()
 
 	filters := []wordle.Filter{
-		wordle.WithLength(*flagMinLength, *flagMaxLength),
+		wordle.WithLength(*flagWordLength),
 	}
 	opts := []wordle.Option{
 		wordle.WithAnswer(*flagAnswer),
@@ -52,7 +51,7 @@ func main() {
 		wordle.WithWordFilters(filters...),
 	}
 	if *flagSolveExternal {
-		opts = append(opts, wordle.WithUnknownAnswer(*flagMaxLength))
+		opts = append(opts, wordle.WithUnknownAnswer(*flagWordLength))
 	}
 
 	// generate a new wordle
@@ -93,7 +92,7 @@ func getUserInput(w wordle.Wordle, currAttempt wordle.Attempt, hints []string) (
 			}
 		}
 	case keyboard.KeyEnter:
-		if len(currAttempt.Answer) == *flagMaxLength {
+		if len(currAttempt.Answer) == *flagWordLength {
 			if *flagSolveExternal && len(currAttempt.Result) < len(currAttempt.Answer) {
 				inputModeCharStatus = true
 			} else {
@@ -105,7 +104,7 @@ func getUserInput(w wordle.Wordle, currAttempt wordle.Attempt, hints []string) (
 		}
 	default:
 		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') {
-			if len(currAttempt.Answer) < *flagMaxLength {
+			if len(currAttempt.Answer) < *flagWordLength {
 				currAttempt.Answer += strings.ToLower(string(char))
 			}
 		} else if inputModeCharStatus {
@@ -127,15 +126,14 @@ func initFlagsAndKeyboard() {
 	if *flagHelp {
 		printHelp()
 	}
-	if *flagMinLength > *flagMaxLength {
-		logErrorAndExit("min-length [%d] > max-length [%d]", *flagMinLength, *flagMaxLength)
+	if *flagWordLength < 3 || *flagWordLength > 10 {
+		logErrorAndExit("word-length [%d] has to be between 3 and 10", *flagWordLength)
 	}
 	if *flagDemo || *flagSolveExternal {
 		*flagHints = true
 	}
 	if *flagAnswer != "" {
-		*flagMaxLength = len(*flagAnswer)
-		*flagMinLength = len(*flagAnswer)
+		*flagWordLength = len(*flagAnswer)
 	}
 
 	// over-ride keyboard handling
@@ -203,9 +201,6 @@ func prompt(w wordle.Wordle) {
 
 		// prompt the user for input
 		if *flagDemo {
-			if len(hints) == 0 {
-				logErrorAndExit("Uh oh... failed to solve the Wordle! Big Sad!")
-			}
 			currAttempt, hints = demoSolveWithHints(w, currAttempt, hints)
 		} else {
 			currAttempt, hints = getUserInput(w, currAttempt, hints)
@@ -224,6 +219,9 @@ func demoSolveWithHints(w wordle.Wordle, currAttempt wordle.Attempt, hints []str
 		}
 	}
 	if demoWord == "" {
+		if len(hints) == 0 {
+			logErrorAndExit("Uh oh... failed to solve the Wordle! Big Sad!")
+		}
 		demoWord = hints[0]
 		demoWordSet = true
 	}
@@ -399,7 +397,7 @@ func renderWordle(w wordle.Wordle, currAttempt wordle.Attempt) string {
 func renderWordleAttempt(attempt wordle.Attempt) string {
 	tw := table.NewWriter()
 	twAttemptRow := table.Row{}
-	for idx := 0; idx < *flagMaxLength; idx++ {
+	for idx := 0; idx < *flagWordLength; idx++ {
 		var char string
 		if idx < len(attempt.Answer) {
 			char = strings.ToUpper(string(attempt.Answer[idx]))

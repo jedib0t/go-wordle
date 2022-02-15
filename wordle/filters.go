@@ -5,9 +5,9 @@ package wordle
 type Filter func(word string) bool
 
 // WithLength helps filter the words by min/max lengths.
-func WithLength(min, max int) Filter {
+func WithLength(wordLen int) Filter {
 	return func(word string) bool {
-		if len(word) < min || len(word) > max {
+		if len(word) != wordLen {
 			return false
 		}
 		return true

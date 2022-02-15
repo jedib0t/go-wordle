@@ -8,7 +8,7 @@ import (
 
 func Test_generateHints_aroma(t *testing.T) {
 	filters := Filters{
-		WithLength(5, 5),
+		WithLength(5),
 	}
 	dictionary := filters.Apply(&wordsEnglish)
 	assert.Contains(t, dictionary, "aroma")
@@ -45,7 +45,7 @@ func Test_generateHints_aroma(t *testing.T) {
 
 func Test_generateHints_crave(t *testing.T) {
 	filters := Filters{
-		WithLength(5, 5),
+		WithLength(5),
 	}
 	dictionary := filters.Apply(&wordsEnglish)
 	assert.Contains(t, dictionary, "crave")
@@ -91,7 +91,7 @@ func Test_generateHints_crave(t *testing.T) {
 
 func Test_generateHints_cynic(t *testing.T) {
 	filters := Filters{
-		WithLength(5, 5),
+		WithLength(5),
 	}
 	dictionary := filters.Apply(&wordsEnglish)
 	assert.Contains(t, dictionary, "cynic")
@@ -122,7 +122,73 @@ func Test_generateHints_cynic(t *testing.T) {
 	alphaStatusMap["i"] = PresentInWrongLocation
 	alphaStatusMap["y"] = PresentInWrongLocation
 	hints = generateHints(dictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, 2)
+	assert.Len(t, hints, maxHints)
+	assert.Equal(t, "calve", hints[0])
+
+	attempts = append(attempts, Attempt{Answer: "calve", Result: []CharacterStatus{3, 0, 0, 0, 0}})
+	delete(alphaStatusMap, "a")
+	delete(alphaStatusMap, "l")
+	delete(alphaStatusMap, "v")
+	delete(alphaStatusMap, "e")
+	alphaStatusMap["c"] = PresentInCorrectLocation
+	hints = generateHints(dictionary, attempts, alphaStatusMap)
+	assert.Len(t, hints, 1)
 	assert.Equal(t, "cynic", hints[0])
-	assert.Equal(t, "vinyl", hints[1])
+}
+
+func Test_generateHints_widdy(t *testing.T) {
+	filters := Filters{
+		WithLength(5),
+	}
+	dictionary := filters.Apply(&wordsEnglish)
+	assert.Contains(t, dictionary, "widdy")
+	attempts := make([]Attempt, 0)
+	alphaStatusMap := make(map[string]CharacterStatus)
+	for _, r := range "abcdefghijklmnopqrstuvwxyz" {
+		alphaStatusMap[string(r)] = Unknown
+	}
+
+	hints := generateHints(dictionary, attempts, alphaStatusMap)
+	assert.Len(t, hints, maxHints)
+	assert.Equal(t, "arose", hints[0])
+
+	attempts = append(attempts, Attempt{Answer: "arose", Result: []CharacterStatus{0, 0, 0, 0, 0}})
+	delete(alphaStatusMap, "a")
+	delete(alphaStatusMap, "r")
+	delete(alphaStatusMap, "o")
+	delete(alphaStatusMap, "s")
+	delete(alphaStatusMap, "e")
+	hints = generateHints(dictionary, attempts, alphaStatusMap)
+	assert.Len(t, hints, maxHints)
+	assert.Equal(t, "unity", hints[0])
+
+	attempts = append(attempts, Attempt{Answer: "unity", Result: []CharacterStatus{0, 0, 2, 0, 3}})
+	delete(alphaStatusMap, "u")
+	delete(alphaStatusMap, "n")
+	delete(alphaStatusMap, "t")
+	alphaStatusMap["i"] = PresentInWrongLocation
+	alphaStatusMap["y"] = PresentInCorrectLocation
+	hints = generateHints(dictionary, attempts, alphaStatusMap)
+	assert.Len(t, hints, maxHints)
+	assert.Equal(t, "dimly", hints[0])
+
+	attempts = append(attempts, Attempt{Answer: "dimly", Result: []CharacterStatus{2, 3, 0, 0, 3}})
+	delete(alphaStatusMap, "m")
+	delete(alphaStatusMap, "l")
+	alphaStatusMap["d"] = PresentInWrongLocation
+	alphaStatusMap["i"] = PresentInCorrectLocation
+	alphaStatusMap["y"] = PresentInCorrectLocation
+	hints = generateHints(dictionary, attempts, alphaStatusMap)
+	assert.Len(t, hints, maxHints)
+	assert.Equal(t, "bewig", hints[0])
+
+	attempts = append(attempts, Attempt{Answer: "bewig", Result: []CharacterStatus{0, 0, 2, 2, 0}})
+	delete(alphaStatusMap, "b")
+	delete(alphaStatusMap, "e")
+	delete(alphaStatusMap, "g")
+	alphaStatusMap["w"] = PresentInWrongLocation
+	alphaStatusMap["i"] = PresentInWrongLocation
+	hints = generateHints(dictionary, attempts, alphaStatusMap)
+	assert.Len(t, hints, 1)
+	assert.Equal(t, "widdy", hints[0])
 }

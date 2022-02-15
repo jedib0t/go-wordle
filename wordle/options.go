@@ -18,7 +18,7 @@ var (
 		WithDictionary(&wordsEnglish),
 		WithMaxAttempts(5),
 		WithWordFilters(
-			WithLength(5, 5),
+			WithLength(5),
 		),
 	}
 )

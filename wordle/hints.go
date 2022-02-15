@@ -53,24 +53,36 @@ func generateHints(dictionary []string, attempts []Attempt, alphasStatusMap map[
 		words = filterWordsWithLettersMissing(words, alphasPresent)
 	}
 
-	// if most letters are in right position, but there are still a lot more
-	// words to choose from, try to make words using the missing letters
-	// (ex.: cra_e; options=crake|crane|crate|crave|craze; find words with k,n,t,v,z)
-	if len(alphasInCorrectLocation) >= (maxWordLength*75/100) && len(words) >= maxWordLength-1 {
-		missingLetters := findMissingLetters(words, alphasInCorrectLocation)
-		words = findWordsWithMostMissingLetters(dictionary, missingLetters)
-	} else {
-		// build a frequency map and sort by it
-		freqMap := buildCharacterFrequencyMap(words)
-		// sort in descending order of frequency
-		sort.SliceStable(words, func(i, j int) bool {
-			iFreq := calculateFrequencyValue(words[i], freqMap)
-			jFreq := calculateFrequencyValue(words[j], freqMap)
-			if iFreq == jFreq {
-				return words[i] < words[j] // sort alphabetically
-			}
-			return iFreq > jFreq
-		})
+	// if there is more than one option, try narrowing it down
+	if len(words) > 1 {
+		if len(alphasInCorrectLocation) >= (maxWordLength*75/100) && len(words) >= maxWordLength-1 {
+			// if most letters are in right position, but there are still a lot
+			// more words to choose from, try to make words using the missing
+			// letters (ex.: cra_e; options=crake|crane|crate|crave|craze;
+			// find words with k,n,t,v,z)
+			missingLetters := findMissingLetters(words, alphasInCorrectLocation)
+			words = findWordsWithMostMissingLetters(dictionary, missingLetters)
+		} else if len(alphasInCorrectLocation) < (maxWordLength*75/100) && len(words) < 10 {
+			// if few letters are in right position, and there are only a few
+			// options to choose from, try to make words using the unique
+			// letters in all the words (ex.: _iddy; options=biddy|giddy|kiddy|widdy;
+			// find words with b,g,k,w)
+			missingLetters := findDifferingLetters(words)
+			words = findWordsWithMostMissingLetters(dictionary, missingLetters)
+		} else {
+			// build a frequency map and sort by it to eliminate most common
+			// letters for the next attempt
+			freqMap := buildCharacterFrequencyMap(words)
+			// sort in descending order of frequency
+			sort.SliceStable(words, func(i, j int) bool {
+				iFreq := calculateFrequencyValue(words[i], freqMap)
+				jFreq := calculateFrequencyValue(words[j], freqMap)
+				if iFreq == jFreq {
+					return words[i] < words[j] // sort alphabetically
+				}
+				return iFreq > jFreq
+			})
+		}
 	}
 
 	// return the top list
@@ -217,6 +229,29 @@ func filterWordsWithLettersUnknown(words []string, lettersMap map[string]bool) [
 		}
 	}
 	return rsp
+}
+
+func findDifferingLetters(words []string) map[string]bool {
+	letterCountMap := make(map[string]int)
+	for _, word := range words {
+		letterFoundMap := make(map[string]bool)
+		for _, char := range word {
+			charStr := string(char)
+			// count each letter only once per word
+			if !letterFoundMap[charStr] {
+				letterCountMap[charStr]++
+				letterFoundMap[charStr] = true
+			}
+		}
+	}
+
+	rspMap := make(map[string]bool)
+	for char, count := range letterCountMap {
+		if count < 2 {
+			rspMap[char] = true
+		}
+	}
+	return rspMap
 }
 
 func findMissingLetters(words []string, letterMap map[string]bool) map[string]bool {
