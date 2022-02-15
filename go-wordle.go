@@ -88,9 +88,10 @@ Flags
 
 func prompt(w wordle.Wordle) {
 	cliAttempts := strings.Split(*flagAttempts, ",")
-	var currAttempt wordle.Attempt
+	hints := w.Hints()
+	currAttempt := wordle.Attempt{}
 	for {
-		render(w, currAttempt)
+		render(w, hints, currAttempt)
 		if w.Solved() {
 			break
 		}
@@ -123,6 +124,7 @@ func prompt(w wordle.Wordle) {
 		case keyboard.KeyEnter:
 			if len(currAttempt.Answer) == *flagMaxLength {
 				_, _ = w.Attempt(currAttempt.Answer)
+				hints = w.Hints()
 				currAttempt = wordle.Attempt{}
 			}
 		default:
@@ -135,7 +137,7 @@ func prompt(w wordle.Wordle) {
 	}
 }
 
-func render(w wordle.Wordle, currAttempt wordle.Attempt) {
+func render(w wordle.Wordle, hints []string, currAttempt wordle.Attempt) {
 	for linesRendered > 0 {
 		fmt.Print(text.CursorUp.Sprint())
 		fmt.Print(text.EraseLine.Sprint())
@@ -146,7 +148,7 @@ func render(w wordle.Wordle, currAttempt wordle.Attempt) {
 	tw.AppendHeader(table.Row{"░ ▒ ▓  W O R D L E  ▓ ▒ ░"})
 	tw.AppendRow(table.Row{renderWordle(w, currAttempt)})
 	if *flagHints && !w.Solved() {
-		tw.AppendFooter(table.Row{renderHints(w)})
+		tw.AppendFooter(table.Row{renderHints(hints)})
 	}
 	if !*flagNoKeyboard {
 		tw.AppendFooter(table.Row{renderKeyboard(w)})
@@ -199,8 +201,7 @@ func renderKeyboard(w wordle.Wordle) string {
 	return tw.Render()
 }
 
-func renderHints(w wordle.Wordle) string {
-	hints := w.Hints()
+func renderHints(hints []string) string {
 	if len(hints) == 0 {
 		return colorHints.Sprint("- no hints found -")
 	}
