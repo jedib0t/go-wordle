@@ -62,7 +62,7 @@ func generateHints(dictionary []string, attempts []Attempt, alphasStatusMap map[
 		// build a frequency map and sort by it
 		freqMap := buildCharacterFrequencyMap(words)
 		// sort in descending order of frequency
-		sort.Slice(words, func(i, j int) bool {
+		sort.SliceStable(words, func(i, j int) bool {
 			return calculateFrequencyValue(words[i], freqMap) > calculateFrequencyValue(words[j], freqMap)
 		})
 	}
@@ -107,8 +107,13 @@ func buildKnownCharacterLocationMap(attempts []Attempt) (map[string][]int, map[s
 
 func calculateFrequencyValue(word string, freqMap map[string]int) int {
 	val := 0
+	charSeen := make(map[string]bool)
 	for _, char := range word {
-		val += freqMap[string(char)]
+		charStr := string(char)
+		if !charSeen[charStr] {
+			val += freqMap[charStr]
+			charSeen[charStr] = true
+		}
 	}
 	return val
 }
@@ -232,7 +237,7 @@ func findWordsWithMostMissingLetters(words []string, lettersMap map[string]bool)
 	}
 
 	// sort in descending order of score
-	sort.Slice(words, func(i, j int) bool {
+	sort.SliceStable(words, func(i, j int) bool {
 		return missingLettersScore(words[i]) > missingLettersScore(words[j])
 	})
 	return words

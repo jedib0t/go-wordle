@@ -4,7 +4,7 @@ package wordle
 type Wordle interface {
 	Alphabets() map[string]CharacterStatus
 	Answer() string
-	Attempt(word string) (*Attempt, error)
+	Attempt(word string, result ...CharacterStatus) (*Attempt, error)
 	Attempts() []Attempt
 	Hints() []string
 	Reset() error

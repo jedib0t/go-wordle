@@ -1,6 +1,10 @@
 package wordle
 
-import "github.com/jedib0t/go-wordle/words"
+import (
+	"strings"
+
+	"github.com/jedib0t/go-wordle/words"
+)
 
 // Option helps customize the Wordle game.
 type Option func(w *wordle)
@@ -15,7 +19,6 @@ var (
 		WithMaxAttempts(5),
 		WithWordFilters(
 			WithLength(5, 5),
-			WithNoRepeatingCharacters(),
 		),
 	}
 )
@@ -45,5 +48,14 @@ func WithMaxAttempts(n int) Option {
 func WithWordFilters(filters ...Filter) Option {
 	return func(w *wordle) {
 		w.wordFilters = filters
+	}
+}
+
+// WithUnknownAnswer sets up the puzzle with an unknown answer; can be used to
+// solve puzzle externally by just leveraging the hinting system.
+func WithUnknownAnswer(wordLen int) Option {
+	return func(w *wordle) {
+		w.answer = strings.Repeat(" ", wordLen)
+		w.answerUnknown = true
 	}
 }
