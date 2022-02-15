@@ -133,6 +133,10 @@ func initFlagsAndKeyboard() {
 	if *flagDemo || *flagSolveExternal {
 		*flagHints = true
 	}
+	if *flagAnswer != "" {
+		*flagMaxLength = len(*flagAnswer)
+		*flagMinLength = len(*flagAnswer)
+	}
 
 	// over-ride keyboard handling
 	if err := keyboard.Open(); err != nil {
