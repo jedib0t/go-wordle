@@ -145,11 +145,11 @@ func render(w wordle.Wordle, currAttempt wordle.Attempt) {
 	tw := table.NewWriter()
 	tw.AppendHeader(table.Row{"░ ▒ ▓  W O R D L E  ▓ ▒ ░"})
 	tw.AppendRow(table.Row{renderWordle(w, currAttempt)})
-	if !*flagNoKeyboard {
-		tw.AppendFooter(table.Row{renderKeyboard(w)})
-	}
 	if *flagHints && !w.Solved() {
 		tw.AppendFooter(table.Row{renderHints(w)})
+	}
+	if !*flagNoKeyboard {
+		tw.AppendFooter(table.Row{renderKeyboard(w)})
 	}
 	tw.AppendFooter(table.Row{colorHints.Sprint("escape/ctrl+c to quit; ctrl+r to restart")})
 	tw.SetColumnConfigs([]table.ColumnConfig{
