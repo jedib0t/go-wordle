@@ -36,7 +36,8 @@ func generateHints(dictionary []string, attempts []Attempt, alphasStatusMap map[
 	var words []string
 	// if there are too many unknowns, try words with unknown letters to gather
 	// more data for next round
-	if len(alphasUnknown) > 18 {
+	maxWordLength := calculateMaximumWordLength(dictionary)
+	if len(alphasUnknown) > 20 && len(alphasInCorrectLocation) >= (maxWordLength*75/100) {
 		words = filterWordsWithLettersUnknown(dictionary, alphasUnknown)
 	}
 
@@ -55,7 +56,6 @@ func generateHints(dictionary []string, attempts []Attempt, alphasStatusMap map[
 	// if most letters are in right position, but there are still a lot more
 	// words to choose from, try to make words using the missing letters
 	// (ex.: cra_e; options=crake|crane|crate|crave|craze; find words with k,n,t,v,z)
-	maxWordLength := calculateMaximumWordLength(dictionary)
 	if len(alphasInCorrectLocation) >= (maxWordLength*75/100) && len(words) >= maxWordLength-1 {
 		words = findWordsWithMostMissingLetters(dictionary, findMissingLetters(words, alphasInCorrectLocation))
 	} else {
