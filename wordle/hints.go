@@ -56,8 +56,9 @@ func generateHints(dictionary []string, attempts []Attempt, alphasStatusMap map[
 	// if most letters are in right position, but there are still a lot more
 	// words to choose from, try to make words using the missing letters
 	// (ex.: cra_e; options=crake|crane|crate|crave|craze; find words with k,n,t,v,z)
-	if len(alphasInCorrectLocation) >= (maxWordLength*75/100) && len(words) >= maxWordLength-1 {
-		words = findWordsWithMostMissingLetters(dictionary, findMissingLetters(words, alphasInCorrectLocation))
+	if len(alphasInCorrectLocation) >= (maxWordLength*75/100) && len(words) >= maxWordLength-3 {
+		missingLetters := findMissingLetters(words, alphasInCorrectLocation)
+		words = findWordsWithMostMissingLetters(dictionary, missingLetters)
 	} else {
 		// build a frequency map and sort by it
 		freqMap := buildCharacterFrequencyMap(words)
@@ -233,9 +234,14 @@ func findMissingLetters(words []string, letterMap map[string]bool) map[string]bo
 func findWordsWithMostMissingLetters(words []string, lettersMap map[string]bool) []string {
 	missingLettersScore := func(word string) int {
 		score := 0
+		letterSeen := make(map[string]bool)
 		for _, char := range word {
-			if lettersMap[string(char)] {
-				score++
+			charStr := string(char)
+			if !letterSeen[charStr] {
+				if lettersMap[charStr] {
+					score++
+				}
+				letterSeen[charStr] = true
 			}
 		}
 		return score

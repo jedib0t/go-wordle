@@ -25,10 +25,31 @@ func Test_generateHints_aroma(t *testing.T) {
 	attempts = append(attempts, Attempt{Answer: "arose", Result: []CharacterStatus{3, 3, 3, 0, 0}})
 	delete(alphaStatusMap, "s")
 	delete(alphaStatusMap, "e")
+	alphaStatusMap["a"] = PresentInCorrectLocation
+	alphaStatusMap["r"] = PresentInCorrectLocation
+	alphaStatusMap["o"] = PresentInCorrectLocation
 	hints = generateHints(dictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, 2)
-	assert.Equal(t, "aroid", hints[0])
-	assert.Equal(t, "aroma", hints[1])
+	assert.Len(t, hints, maxHints)
+	assert.Equal(t, "bichy", hints[0])
+
+	attempts = append(attempts, Attempt{Answer: "bichy", Result: []CharacterStatus{0, 0, 0, 0, 0}})
+	delete(alphaStatusMap, "b")
+	delete(alphaStatusMap, "i")
+	delete(alphaStatusMap, "c")
+	delete(alphaStatusMap, "h")
+	delete(alphaStatusMap, "y")
+	hints = generateHints(dictionary, attempts, alphaStatusMap)
+	assert.Len(t, hints, maxHints)
+	assert.Equal(t, "adman", hints[0])
+
+	attempts = append(attempts, Attempt{Answer: "adman", Result: []CharacterStatus{3, 0, 2, 2, 0}})
+	delete(alphaStatusMap, "d")
+	delete(alphaStatusMap, "n")
+	alphaStatusMap["a"] = PresentInCorrectLocation
+	alphaStatusMap["m"] = PresentInWrongLocation
+	hints = generateHints(dictionary, attempts, alphaStatusMap)
+	assert.Len(t, hints, 1)
+	assert.Equal(t, "aroma", hints[0])
 }
 
 func Test_generateHints_crave(t *testing.T) {
@@ -63,17 +84,27 @@ func Test_generateHints_crave(t *testing.T) {
 	alphaStatusMap["a"] = PresentInCorrectLocation
 	hints = generateHints(dictionary, attempts, alphaStatusMap)
 	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "kanzu", hints[0])
+	assert.Equal(t, "pinky", hints[0])
 
-	attempts = append(attempts, Attempt{Answer: "kanzu", Result: []CharacterStatus{0, 2, 0, 0, 0}})
-	delete(alphaStatusMap, "k")
+	attempts = append(attempts, Attempt{Answer: "pinky", Result: []CharacterStatus{0, 0, 0, 0, 0}})
+	delete(alphaStatusMap, "p")
+	delete(alphaStatusMap, "i")
 	delete(alphaStatusMap, "n")
-	delete(alphaStatusMap, "z")
-	delete(alphaStatusMap, "u")
+	delete(alphaStatusMap, "k")
+	delete(alphaStatusMap, "y")
 	hints = generateHints(dictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, 2)
-	assert.Equal(t, "crape", hints[0])
-	assert.Equal(t, "crave", hints[1])
+	assert.Len(t, hints, maxHints)
+	assert.Equal(t, "vejoz", hints[0])
+
+	attempts = append(attempts, Attempt{Answer: "vejoz", Result: []CharacterStatus{2, 2, 0, 0, 0}})
+	delete(alphaStatusMap, "j")
+	delete(alphaStatusMap, "o")
+	delete(alphaStatusMap, "z")
+	alphaStatusMap["v"] = PresentInWrongLocation
+	alphaStatusMap["e"] = PresentInWrongLocation
+	hints = generateHints(dictionary, attempts, alphaStatusMap)
+	assert.Len(t, hints, 1)
+	assert.Equal(t, "crave", hints[0])
 }
 
 func Test_generateHints_cynic(t *testing.T) {
@@ -100,15 +131,27 @@ func Test_generateHints_cynic(t *testing.T) {
 	delete(alphaStatusMap, "e")
 	hints = generateHints(dictionary, attempts, alphaStatusMap)
 	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "until", hints[0])
+	assert.Equal(t, "unity", hints[0])
 
-	attempts = append(attempts, Attempt{Answer: "until", Result: []CharacterStatus{0, 2, 0, 3, 0}})
+	attempts = append(attempts, Attempt{Answer: "unity", Result: []CharacterStatus{0, 2, 2, 0, 2}})
 	delete(alphaStatusMap, "u")
 	delete(alphaStatusMap, "t")
-	delete(alphaStatusMap, "l")
 	alphaStatusMap["n"] = PresentInWrongLocation
 	alphaStatusMap["i"] = PresentInWrongLocation
+	alphaStatusMap["y"] = PresentInWrongLocation
 	hints = generateHints(dictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, 2)
-	assert.Equal(t, "cynic", hints[0])
+	assert.Len(t, hints, maxHints)
+	assert.Equal(t, "nymil", hints[0])
+
+	attempts = append(attempts, Attempt{Answer: "nymil", Result: []CharacterStatus{2, 3, 0, 3, 0}})
+	delete(alphaStatusMap, "m")
+	delete(alphaStatusMap, "l")
+	alphaStatusMap["n"] = PresentInWrongLocation
+	alphaStatusMap["y"] = PresentInCorrectLocation
+	alphaStatusMap["i"] = PresentInCorrectLocation
+	hints = generateHints(dictionary, attempts, alphaStatusMap)
+	assert.Len(t, hints, 3)
+	assert.Equal(t, "gynic", hints[0])
+	assert.Equal(t, "cynic", hints[1])
+	assert.Equal(t, "bynin", hints[2])
 }
