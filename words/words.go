@@ -18,6 +18,7 @@ var (
 
 func init() {
 	englishOnce.Do(func() {
+		englishTxtRaw = strings.ReplaceAll(englishTxtRaw, "\r", "")
 		englishWords = strings.Split(englishTxtRaw, "\n")
 		sort.Strings(englishWords)
 	})
