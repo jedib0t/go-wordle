@@ -56,7 +56,7 @@ func generateHints(dictionary []string, attempts []Attempt, alphasStatusMap map[
 	// if most letters are in right position, but there are still a lot more
 	// words to choose from, try to make words using the missing letters
 	// (ex.: cra_e; options=crake|crane|crate|crave|craze; find words with k,n,t,v,z)
-	if len(alphasInCorrectLocation) >= (maxWordLength*75/100) && len(words) >= maxWordLength-3 {
+	if len(alphasInCorrectLocation) >= (maxWordLength*75/100) && len(words) >= maxWordLength-1 {
 		missingLetters := findMissingLetters(words, alphasInCorrectLocation)
 		words = findWordsWithMostMissingLetters(dictionary, missingLetters)
 	} else {
