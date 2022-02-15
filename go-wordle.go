@@ -171,7 +171,7 @@ func render(w wordle.Wordle, hints []string, currAttempt wordle.Attempt) {
 	}
 
 	tw := table.NewWriter()
-	tw.AppendHeader(table.Row{"░ ▒ ▓  W O R D L E  ▓ ▒ ░"})
+	tw.AppendHeader(table.Row{renderTitle()})
 	tw.AppendRow(table.Row{renderWordle(w, currAttempt)})
 	if *flagHints && !w.Solved() {
 		tw.AppendFooter(table.Row{renderHints(hints)})
@@ -285,6 +285,17 @@ func renderKeyboardCharacterStatus() string {
 	}
 
 	tw.AppendRow(row)
+	tw.Style().Options = table.OptionsNoBordersAndSeparators
+	return tw.Render()
+}
+
+func renderTitle() string {
+	colors := text.Colors{text.FgHiWhite}
+
+	tw := table.NewWriter()
+	tw.AppendRow(table.Row{colors.Sprint("       ▞ ▛▀▀▀▀▀▀▀▀▀▀▀▀▀▜ ▚       ")})
+	tw.AppendRow(table.Row{colors.Sprint("░ ▒ ▓ █ ▌  W O R D L E  ▐ █ ▓ ▒ ░")})
+	tw.AppendRow(table.Row{colors.Sprint("       ▚ ▙▄▄▄▄▄▄▄▄▄▄▄▄▄▟ ▞       ")})
 	tw.Style().Options = table.OptionsNoBordersAndSeparators
 	return tw.Render()
 }
