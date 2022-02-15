@@ -43,6 +43,9 @@ func main() {
 	if *flagMinLength > *flagMaxLength {
 		logErrorAndExit("min-length [%d] > max-length [%d]", *flagMinLength, *flagMaxLength)
 	}
+	if *flagSolveExternal {
+		*flagHints = true
+	}
 
 	// over-ride keyboard handling
 	if err := keyboard.Open(); err != nil {
