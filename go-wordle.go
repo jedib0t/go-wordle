@@ -215,7 +215,7 @@ func prompt(w wordle.Wordle) {
 
 func demoSolveWithHints(w wordle.Wordle, currAttempt wordle.Attempt, hints []string) (wordle.Attempt, []string) {
 	if demoWordSet {
-		time.Sleep(time.Second)
+		time.Sleep(time.Second / 2)
 		// if the word is empty and moved over to the answer, attempt it
 		if demoWord == "" {
 			_, _ = w.Attempt(currAttempt.Answer)
