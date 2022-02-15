@@ -83,6 +83,13 @@ func (w wordle) Attempts() []Attempt {
 	return w.attempts
 }
 
+func (w wordle) Hints() []string {
+	if w.solved {
+		return nil
+	}
+	return generateHints(w.wordsAllowed, w.attempts, w.alphabets)
+}
+
 func (w *wordle) Reset() error {
 	return w.init()
 }

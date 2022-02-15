@@ -15,13 +15,15 @@ import (
 )
 
 var (
-	flagAnswer      = flag.String("answer", "", "Pre-set answer if you don't want a random word")
-	flagAttempts    = flag.String("attempts", "", "Words to attempt before prompting user")
-	flagHelp        = flag.Bool("help", false, "Show this help-text?")
-	flagMaxAttempts = flag.Int("max-attempts", 6, "Maximum attempts allowed")
-	flagMaxLength   = flag.Int("max-length", 5, "Maximum word length")
-	flagMinLength   = flag.Int("min-length", 5, "Minimum word length")
-	flagNoKeyboard  = flag.Bool("no-keyboard", false, "Do not show the Keyboard?")
+	flagAllowRepeats = flag.Bool("allow-repeat", false, "Allow repeating characters?")
+	flagAnswer       = flag.String("answer", "", "Pre-set answer if you don't want a random word")
+	flagAttempts     = flag.String("attempts", "", "Words to attempt before prompting user")
+	flagHelp         = flag.Bool("help", false, "Show this help-text?")
+	flagHints        = flag.Bool("hints", false, "Show hints and help solve?")
+	flagMaxAttempts  = flag.Int("max-attempts", 6, "Maximum attempts allowed")
+	flagMaxLength    = flag.Int("max-length", 5, "Maximum word length")
+	flagMinLength    = flag.Int("min-length", 5, "Minimum word length")
+	flagNoKeyboard   = flag.Bool("no-keyboard", false, "Do not show the Keyboard?")
 
 	colorHints              = text.Colors{text.FgHiBlack, text.Italic}
 	colorsSpecial           = [3]text.Color{text.FgBlack, text.BgBlack, text.FgHiYellow}
@@ -50,14 +52,18 @@ func main() {
 		_ = keyboard.Close()
 	}()
 
+	filters := []wordle.Filter{
+		wordle.WithLength(*flagMinLength, *flagMaxLength),
+	}
+	if !*flagAllowRepeats {
+		filters = append(filters, wordle.WithNoRepeatingCharacters())
+	}
+
 	// generate a new wordle
 	w, err := wordle.New(
 		wordle.WithAnswer(*flagAnswer),
 		wordle.WithMaxAttempts(*flagMaxAttempts),
-		wordle.WithWordFilters(
-			wordle.WithLength(*flagMinLength, *flagMaxLength),
-			wordle.WithNoRepeatingCharacters(),
-		),
+		wordle.WithWordFilters(filters...),
 	)
 	if err != nil {
 		logErrorAndExit("failed to initiate new Wordle: %v", err)
@@ -141,14 +147,17 @@ func render(w wordle.Wordle, currAttempt wordle.Attempt) {
 	tw.AppendRow(table.Row{renderWordle(w, currAttempt)})
 	if !*flagNoKeyboard {
 		tw.AppendFooter(table.Row{renderKeyboard(w)})
-		tw.AppendSeparator()
 	}
-	tw.AppendFooter(table.Row{colorHints.Sprint("[escape/ctrl+c to quit] [ctrl+r to restart]")})
+	if *flagHints && !w.Solved() {
+		tw.AppendFooter(table.Row{renderHints(w)})
+	}
+	tw.AppendFooter(table.Row{colorHints.Sprint("escape/ctrl+c to quit; ctrl+r to restart")})
 	tw.SetColumnConfigs([]table.ColumnConfig{
 		{Number: 1, Align: text.AlignCenter, AlignHeader: text.AlignCenter, AlignFooter: text.AlignCenter},
 	})
 	tw.SetStyle(table.StyleBold)
 	tw.Style().Format.Footer = text.FormatDefault
+	tw.Style().Options.SeparateRows = true
 	out := tw.Render()
 	linesRendered = strings.Count(out, "\n") + 1
 	fmt.Println(out)
@@ -187,6 +196,30 @@ func renderKeyboard(w wordle.Wordle) string {
 		tw.AppendRow(table.Row{twRow.Render()})
 	}
 	tw.Style().Options = table.OptionsNoBordersAndSeparators
+	return tw.Render()
+}
+
+func renderHints(w wordle.Wordle) string {
+	hints := w.Hints()
+	if len(hints) == 0 {
+		return colorHints.Sprint("- no hints found -")
+	}
+
+	tw := table.NewWriter()
+	twRow := table.Row{}
+	for idx, word := range hints {
+		if idx%5 == 0 && len(twRow) > 0 {
+			tw.AppendRow(twRow)
+			twRow = table.Row{}
+		}
+		twRow = append(twRow, colorHints.Sprintf(word))
+	}
+	if len(twRow) > 0 {
+		tw.AppendRow(twRow)
+	}
+	tw.SetStyle(table.StyleLight)
+	tw.Style().Options.DrawBorder = false
+	tw.Style().Options.SeparateRows = true
 	return tw.Render()
 }
 
