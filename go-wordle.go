@@ -60,6 +60,9 @@ func main() {
 	if err != nil {
 		logErrorAndExit("failed to initiate new Wordle: %v", err)
 	}
+	if *flagDemo && *flagAnswer != "" && !w.DictionaryHas(*flagAnswer) {
+		logErrorAndExit("demo cannot proceed as '%s' is not in dictionary", *flagAnswer)
+	}
 	// prompt for user inputs
 	prompt(w)
 }
@@ -136,7 +139,7 @@ func initFlagsAndKeyboard() {
 		logErrorAndExit(err.Error())
 	}
 	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-c
 		exitHandler()
@@ -156,6 +159,7 @@ func initFlagsAndKeyboard() {
 
 func logErrorAndExit(msg string, a ...interface{}) {
 	_, _ = fmt.Fprintf(os.Stderr, "ERROR: "+strings.TrimSpace(msg)+"\n", a...)
+	exitHandler()
 	os.Exit(-1)
 }
 

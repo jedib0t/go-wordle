@@ -61,6 +61,19 @@ func (w wordle) Attempts() []Attempt {
 	return w.attempts
 }
 
+func (w wordle) Dictionary() []string {
+	return *w.dictionary
+}
+
+func (w wordle) DictionaryHas(word string) bool {
+	for _, dictWord := range *w.dictionary {
+		if word == dictWord {
+			return true
+		}
+	}
+	return false
+}
+
 func (w wordle) Hints() []string {
 	if w.solved {
 		return nil

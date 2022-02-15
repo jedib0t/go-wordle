@@ -6,6 +6,8 @@ type Wordle interface {
 	Answer() string
 	Attempt(word string, result ...CharacterStatus) (*Attempt, error)
 	Attempts() []Attempt
+	Dictionary() []string
+	DictionaryHas(word string) bool
 	Hints() []string
 	Reset() error
 	Solved() bool
