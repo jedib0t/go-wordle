@@ -1,4 +1,5 @@
 *.swp
 .coverprofile
 /.idea/
+/dist
 /go-wordle*

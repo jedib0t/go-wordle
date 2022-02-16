@@ -34,8 +34,9 @@ var (
 	colorsInCorrectLocation = [3]text.Color{text.FgHiGreen, text.BgHiGreen, text.FgBlack}
 	demoWord                = ""
 	demoWordSet             = false
-	linesRendered           = 0
 	inputModeCharStatus     = false
+	linesRendered           = 0
+	version                 = "dev"
 )
 
 func main() {
@@ -167,6 +168,8 @@ func logErrorAndExit(msg string, a ...interface{}) {
 
 func printHelp() {
 	fmt.Println(`go-wordle: A GoLang implementation of the Wordle game.
+
+Version: ` + version + `
 
 Flags
 =====`)
