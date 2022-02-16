@@ -27,11 +27,6 @@ jobs:
           go get -u github.com/mitchellh/gox
           go get -u golang.org/x/lint/golint
 
-      # Env
-      - name: Env
-        run: |
-          env | sort
-
       # Run all the unit-tests
       - name: Test
         run: |
