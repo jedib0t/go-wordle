@@ -3,7 +3,7 @@
 TOOLS := github.com/mitchellh/gox@v1.0.1 \
             golang.org/x/lint/golint \
 
-VERSION = dev
+VERSION ?= dev
 ifdef GITHUB_REF_NAME
 VERSION = $(GITHUB_REF_NAME)
 endif
