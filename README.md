@@ -18,8 +18,8 @@ A golang implementation of the popular New York Times game [Wordle](https://www.
   * Automated solving with or without a pre-set answer
   * Uses the built-in hinting system to choose answers
   * No user input allowed (except for Esc/Ctrl+C)
-* Solve external Wordles with `-solve-external`
-  * If you are using this tool as a cheat and solve Wordles elsewhere ;)
+* Helper mode to solve external Wordle puzzles with `-helper`
+  * If you are using this tool as a cheat and solve Wordle puzzles elsewhere ;)
   * Show hints and helps record the results to get you to the answer
 
 ## Automated Demo Mode
