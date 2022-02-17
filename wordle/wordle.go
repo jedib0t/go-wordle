@@ -39,7 +39,17 @@ func (w *wordle) Answer() string {
 	return w.answer
 }
 
+func (w wordle) AnswerUnknown() bool {
+	return w.answerUnknown
+}
+
 func (w *wordle) Attempt(word string, result ...CharacterStatus) (*Attempt, error) {
+	// do not attempt if game is over
+	if w.GameOver() {
+		return &w.attempts[len(w.attempts)-1], nil
+	}
+
+	// attempt through either available paths
 	var attempt *Attempt
 	var err error
 	if w.answerUnknown {
@@ -72,6 +82,10 @@ func (w wordle) DictionaryHas(word string) bool {
 		}
 	}
 	return false
+}
+
+func (w *wordle) GameOver() bool {
+	return w.Solved() || len(w.attempts) == w.maxAttempts
 }
 
 func (w wordle) Hints() []string {
