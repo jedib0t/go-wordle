@@ -87,15 +87,15 @@ func getUserInputCharStatus(wordles []wordle.Wordle, currAttempts []wordle.Attem
 	getAttempt := func(direction int) (int, wordle.Attempt) {
 		switch direction {
 		case -1:
-			for inputCharStatusAttemptIdx > 0 {
-				if wordles[inputCharStatusAttemptIdx-1].GameOver() {
+			for idx := inputCharStatusAttemptIdx - 1; idx >= 0; idx-- {
+				if !wordles[idx].GameOver() {
+					inputCharStatusAttemptIdx = idx
 					break
 				}
-				inputCharStatusAttemptIdx--
 			}
 		case 0:
 			if wordles[inputCharStatusAttemptIdx].GameOver() {
-				for idx := inputCharStatusAttemptIdx; idx < len(wordles); idx++ {
+				for idx := inputCharStatusAttemptIdx + 1; idx < len(wordles); idx++ {
 					if !wordles[idx].GameOver() {
 						inputCharStatusAttemptIdx = idx
 						break
@@ -103,11 +103,11 @@ func getUserInputCharStatus(wordles []wordle.Wordle, currAttempts []wordle.Attem
 				}
 			}
 		case 1:
-			for inputCharStatusAttemptIdx < len(wordles)-1 {
-				if !wordles[inputCharStatusAttemptIdx+1].GameOver() {
-					inputCharStatusAttemptIdx++
+			for idx := inputCharStatusAttemptIdx + 1; idx < len(wordles); idx++ {
+				if !wordles[idx].GameOver() {
+					inputCharStatusAttemptIdx = idx
+					break
 				}
-				break
 			}
 		}
 		return inputCharStatusAttemptIdx, currAttempts[inputCharStatusAttemptIdx]
@@ -244,6 +244,9 @@ func prompt(wordles []wordle.Wordle) {
 		}
 		if numGameOver == len(wordles) {
 			break
+		}
+		if len(cliAttempts) > 0 {
+			continue
 		}
 
 		// prompt the user for input
