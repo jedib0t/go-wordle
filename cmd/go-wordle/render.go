@@ -1,240 +1,26 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"math/rand"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
-	"time"
 
-	"github.com/eiannone/keyboard"
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/jedib0t/go-wordle/wordle"
 )
 
 var (
-	flagAnswer      = flag.String("answer", "", "Pre-set answer if you don't want a random word")
-	flagAttempts    = flag.String("attempts", "", "Words to attempt before prompting user")
-	flagDemo        = flag.Bool("demo", false, "Show an automated demo?")
-	flagHelp        = flag.Bool("help", false, "Show this help-text?")
-	flagHelper      = flag.Bool("helper", false, "Help solve Wordle puzzle from elsewhere?")
-	flagHints       = flag.Bool("hints", false, "Show hints and help solve?")
-	flagMaxAttempts = flag.Int("max-attempts", 6, "Maximum attempts allowed")
-	flagWordLength  = flag.Int("word-length", 5, "Number of characters in the Word")
-
+	// colors
 	colorHints              = text.Colors{text.FgHiBlack, text.Italic}
 	colorsSpecial           = [3]text.Color{text.FgBlack, text.BgBlack, text.FgHiYellow}
 	colorsUnknown           = [3]text.Color{text.FgHiBlack, text.BgHiBlack, text.FgHiWhite}
 	colorsNotPresent        = [3]text.Color{text.FgBlack, text.BgBlack, text.FgHiBlack}
 	colorsInWrongLocation   = [3]text.Color{text.FgHiYellow, text.BgHiYellow, text.FgBlack}
 	colorsInCorrectLocation = [3]text.Color{text.FgHiGreen, text.BgHiGreen, text.FgBlack}
-	demoWord                = ""
-	demoWordSet             = false
-	inputModeCharStatus     = false
-	linesRendered           = 0
-	version                 = "dev"
+
+	// misc state
+	linesRendered = 0
 )
-
-func main() {
-	initFlagsAndKeyboard()
-	defer exitHandler()
-
-	filters := []wordle.Filter{
-		wordle.WithLength(*flagWordLength),
-	}
-	opts := []wordle.Option{
-		wordle.WithAnswer(*flagAnswer),
-		wordle.WithMaxAttempts(*flagMaxAttempts),
-		wordle.WithWordFilters(filters...),
-	}
-	if *flagHelper {
-		opts = append(opts, wordle.WithUnknownAnswer(*flagWordLength))
-	}
-
-	// generate a new wordle
-	w, err := wordle.New(opts...)
-	if err != nil {
-		logErrorAndExit("failed to initiate new Wordle: %v", err)
-	}
-	if *flagDemo && *flagAnswer != "" && !w.DictionaryHas(*flagAnswer) {
-		logErrorAndExit("demo cannot proceed as '%s' is not in dictionary", *flagAnswer)
-	}
-	// prompt for user inputs
-	prompt(w)
-}
-
-func exitHandler() {
-	_ = keyboard.Close()
-}
-
-func getUserInput(w wordle.Wordle, currAttempt wordle.Attempt, hints []string) (wordle.Attempt, []string) {
-	char, key, err := keyboard.GetSingleKey()
-	if err != nil {
-		logErrorAndExit("failed to get input: %v", err)
-	}
-
-	switch key {
-	case keyboard.KeyEsc, keyboard.KeyCtrlC:
-		os.Exit(0)
-	case keyboard.KeyCtrlR:
-		_ = w.Reset()
-	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
-		if inputModeCharStatus {
-			if len(currAttempt.Result) > 0 {
-				currAttempt.Result = currAttempt.Result[:len(currAttempt.Result)-1]
-			}
-		} else {
-			if len(currAttempt.Answer) > 0 {
-				currAttempt.Answer = currAttempt.Answer[:len(currAttempt.Answer)-1]
-			}
-		}
-	case keyboard.KeyEnter:
-		if len(currAttempt.Answer) == *flagWordLength {
-			if *flagHelper && len(currAttempt.Result) < len(currAttempt.Answer) {
-				inputModeCharStatus = true
-			} else {
-				inputModeCharStatus = false
-				_, _ = w.Attempt(currAttempt.Answer, currAttempt.Result...)
-				hints = w.Hints()
-				currAttempt = wordle.Attempt{}
-			}
-		}
-	default:
-		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') {
-			if len(currAttempt.Answer) < *flagWordLength {
-				currAttempt.Answer += strings.ToLower(string(char))
-			}
-		} else if inputModeCharStatus {
-			if char == '0' {
-				currAttempt.Result = append(currAttempt.Result, wordle.NotPresent)
-			} else if char == '2' {
-				currAttempt.Result = append(currAttempt.Result, wordle.PresentInWrongLocation)
-			} else if char == '3' {
-				currAttempt.Result = append(currAttempt.Result, wordle.PresentInCorrectLocation)
-			}
-		}
-	}
-	return currAttempt, hints
-}
-
-func initFlagsAndKeyboard() {
-	rand.Seed(time.Now().UnixNano())
-	flag.Parse()
-	if *flagHelp {
-		printHelp()
-	}
-	if *flagWordLength < 3 || *flagWordLength > 10 {
-		logErrorAndExit("word-length [%d] has to be between 3 and 10", *flagWordLength)
-	}
-	if *flagDemo || *flagHelper {
-		*flagHints = true
-	}
-	if *flagAnswer != "" {
-		*flagWordLength = len(*flagAnswer)
-	}
-
-	// over-ride keyboard handling
-	if err := keyboard.Open(); err != nil {
-		logErrorAndExit(err.Error())
-	}
-	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
-	go func() {
-		<-c
-		exitHandler()
-	}()
-
-	// demo mode needs special Esp/Ctrl+C handling
-	if *flagDemo {
-		go func() {
-			_, key, _ := keyboard.GetSingleKey()
-			switch key {
-			case keyboard.KeyEsc, keyboard.KeyCtrlC:
-				os.Exit(0)
-			}
-		}()
-	}
-}
-
-func logErrorAndExit(msg string, a ...interface{}) {
-	_, _ = fmt.Fprintf(os.Stderr, "ERROR: "+strings.TrimSpace(msg)+"\n", a...)
-	exitHandler()
-	os.Exit(-1)
-}
-
-func printHelp() {
-	fmt.Println(`go-wordle: A GoLang implementation of the Wordle game.
-
-Version: ` + version + `
-
-Flags
-=====`)
-	flag.PrintDefaults()
-	os.Exit(0)
-}
-
-func prompt(w wordle.Wordle) {
-	cliAttempts := strings.Split(*flagAttempts, ",")
-	currAttempt := wordle.Attempt{}
-	demoWord = ""
-	hints := w.Hints()
-	for {
-		render(w, hints, currAttempt)
-		if w.Solved() {
-			break
-		}
-		if len(w.Attempts()) == *flagMaxAttempts {
-			if !*flagHelper {
-				fmt.Printf("Answer: '%v'\n", strings.ToUpper(w.Answer()))
-			}
-			break
-		}
-
-		// if user provided words to attempt, do that first
-		if len(cliAttempts) > 0 {
-			_, _ = w.Attempt(cliAttempts[0])
-			cliAttempts = cliAttempts[1:]
-			hints = w.Hints()
-			continue
-		}
-
-		// prompt the user for input
-		if *flagDemo {
-			currAttempt, hints = demoSolveWithHints(w, currAttempt, hints)
-		} else {
-			currAttempt, hints = getUserInput(w, currAttempt, hints)
-		}
-	}
-}
-
-func demoSolveWithHints(w wordle.Wordle, currAttempt wordle.Attempt, hints []string) (wordle.Attempt, []string) {
-	if demoWordSet {
-		time.Sleep(time.Second / 2)
-		// if the word is empty and moved over to the answer, attempt it
-		if demoWord == "" {
-			_, _ = w.Attempt(currAttempt.Answer)
-			demoWordSet = false
-			return wordle.Attempt{}, w.Hints()
-		}
-	}
-	if demoWord == "" {
-		if len(hints) == 0 {
-			logErrorAndExit("Uh oh... failed to solve the Wordle! Big Sad!")
-		}
-		demoWord = hints[0]
-		demoWordSet = true
-	}
-	if len(demoWord) > 0 {
-		// move one letter over to the answer
-		currAttempt.Answer += string(demoWord[0])
-		demoWord = demoWord[1:]
-	}
-	return currAttempt, hints
-}
 
 func render(w wordle.Wordle, hints []string, currAttempt wordle.Attempt) {
 	for linesRendered > 0 {

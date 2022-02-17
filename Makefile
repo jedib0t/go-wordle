@@ -14,14 +14,14 @@ default: run
 all: test
 
 build:
-	go build .
+	go build ./cmd/go-wordle
 
 dist:
 	gox -ldflags="-s -w -X main.version=${VERSION}" \
 	    -os="linux darwin windows" \
 	    -arch="amd64" \
 	    -output="./dist/{{.Dir}}_{{.OS}}_{{.Arch}}" \
-	    .
+	    ./cmd/go-wordle
 
 fmt:
 	go fmt $(shell go list ./...)
@@ -33,7 +33,7 @@ lint:
 	golint -set_exit_status $(shell go list ./...)
 
 run:
-	go run .
+	go run ./cmd/go-wordle
 
 test: fmt tidy lint vet build
 	go test -cover -coverprofile=.coverprofile $(shell go list ./...)

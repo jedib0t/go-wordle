@@ -6,10 +6,17 @@ A golang implementation of the popular New York Times game [Wordle](https://www.
 
 <img src="doc/go-wordle.png"/>
 
-## Usage
-* `go run .`
-* Type your answer and `Enter` to attempt it
-* Requires an interactive terminal
+## Install
+
+Pre-built binaries for your Operating System can be found at the [latest release](https://github.com/jedib0t/go-wordle/releases/latest)
+page.
+
+If you want to build you own using GoLang:
+* `go get -u github.com/jedib0t/go-wordle/cmd/go-wordle`
+* `go-wordle`
+
+If you want to run from source, after `git clone`:
+* `go run ./cmd/go-wordle`
 
 ## Features
 * Hinting mode with `-hints`
