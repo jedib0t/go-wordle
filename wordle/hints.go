@@ -18,7 +18,7 @@ var (
 // Wordle puzzle.
 func generateHints(dictionary []string, attempts []Attempt, alphasStatusMap map[string]CharacterStatus) []string {
 	alphasInCorrectLocation := make(map[string]bool)
-	alphasInIncorrectLocation := make(map[string]bool)
+	alphasInWrongLocation := make(map[string]bool)
 	alphasNotPresent := make(map[string]bool)
 	alphasPresent := make(map[string]bool)
 	alphasUnknown := make(map[string]bool)
@@ -30,7 +30,7 @@ func generateHints(dictionary []string, attempts []Attempt, alphasStatusMap map[
 		case NotPresent:
 			alphasNotPresent[charStr] = true
 		case PresentInWrongLocation:
-			alphasInIncorrectLocation[charStr] = true
+			alphasInWrongLocation[charStr] = true
 			alphasPresent[charStr] = true
 		case PresentInCorrectLocation:
 			alphasInCorrectLocation[charStr] = true

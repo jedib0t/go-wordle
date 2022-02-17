@@ -14,6 +14,27 @@ var (
 	testDictionary = testFilters.Apply(&wordsEnglish)
 )
 
+func computeStatus(answer string, word string) []CharacterStatus {
+	rsp := make([]CharacterStatus, len(answer))
+	for idx := range word {
+		if word[idx] == answer[idx] {
+			rsp[idx] = PresentInCorrectLocation
+		} else {
+			foundLetter := false
+			for wrongIdx := range answer {
+				if word[idx] == answer[wrongIdx] {
+					rsp[idx] = PresentInWrongLocation
+					foundLetter = true
+				}
+			}
+			if !foundLetter {
+				rsp[idx] = NotPresent
+			}
+		}
+	}
+	return rsp
+}
+
 func recordAttempt(alphaStatusMap *map[string]CharacterStatus, attempts *[]Attempt, answer string, result []CharacterStatus) {
 	for idx, charStatus := range result {
 		charStr := string(answer[idx])
@@ -31,155 +52,42 @@ func recordAttempt(alphaStatusMap *map[string]CharacterStatus, attempts *[]Attem
 	*attempts = append(*attempts, Attempt{Answer: answer, Result: result})
 }
 
-func Test_generateHints_aroma(t *testing.T) {
-	assert.Contains(t, testDictionary, "aroma")
+func assertHintingEfficiency(t *testing.T, answer string, expectedAttempts int) {
+	filters := Filters{
+		WithLength(len(answer)),
+	}
+	dictionary := filters.Apply(&wordsEnglish)
+
+	assert.Contains(t, dictionary, answer)
 	attempts := make([]Attempt, 0)
 	alphaStatusMap := make(map[string]CharacterStatus)
 	for _, r := range englishAlphabets {
 		alphaStatusMap[string(r)] = Unknown
 	}
 
-	hints := generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "arose", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "arose", []CharacterStatus{3, 3, 3, 0, 0})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "bight", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "bight", []CharacterStatus{0, 0, 0, 0, 0})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, 1)
-	assert.Equal(t, "aroma", hints[0])
+	t.Logf("%s: expecting result in/under %d attempts", answer, expectedAttempts)
+	for attempt := 1; attempt <= expectedAttempts; attempt++ {
+		hints := generateHints(dictionary, attempts, alphaStatusMap)
+		if len(hints) == 0 {
+			break
+		}
+		t.Logf("%s: attempt #%d: hints[0] == '%s'", answer, attempt, hints[0])
+		if hints[0] == answer { // success
+			return
+		}
+		recordAttempt(&alphaStatusMap, &attempts, hints[0], computeStatus(answer, hints[0]))
+	}
+	t.Errorf("%s: failed after %d attempts", answer, expectedAttempts)
 }
 
-func Test_generateHints_crave(t *testing.T) {
-	assert.Contains(t, testDictionary, "crave")
-	attempts := make([]Attempt, 0)
-	alphaStatusMap := make(map[string]CharacterStatus)
-	for _, r := range englishAlphabets {
-		alphaStatusMap[string(r)] = Unknown
-	}
-
-	hints := generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "arose", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "arose", []CharacterStatus{2, 3, 0, 0, 3})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "crate", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "crate", []CharacterStatus{3, 3, 3, 0, 3})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "knaps", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "knaps", []CharacterStatus{0, 0, 3, 0, 0})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, 2)
-	assert.Equal(t, "crave", hints[0])
-	assert.Equal(t, "craze", hints[1])
-}
-
-func Test_generateHints_cynic(t *testing.T) {
-	assert.Contains(t, testDictionary, "cynic")
-	attempts := make([]Attempt, 0)
-	alphaStatusMap := make(map[string]CharacterStatus)
-	for _, r := range englishAlphabets {
-		alphaStatusMap[string(r)] = Unknown
-	}
-
-	hints := generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "arose", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "arose", []CharacterStatus{0, 0, 0, 0, 0})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "unity", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "unity", []CharacterStatus{0, 2, 2, 0, 2})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "calve", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "calve", []CharacterStatus{3, 0, 0, 0, 0})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, 1)
-	assert.Equal(t, "cynic", hints[0])
-}
-
-func Test_generateHints_widdy(t *testing.T) {
-	assert.Contains(t, testDictionary, "widdy")
-	attempts := make([]Attempt, 0)
-	alphaStatusMap := make(map[string]CharacterStatus)
-	for _, r := range englishAlphabets {
-		alphaStatusMap[string(r)] = Unknown
-	}
-
-	hints := generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "arose", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "arose", []CharacterStatus{0, 0, 0, 0, 0})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "unity", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "unity", []CharacterStatus{0, 0, 2, 0, 3})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "dimly", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "dimly", []CharacterStatus{2, 3, 0, 0, 3})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "bewig", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "bewig", []CharacterStatus{0, 0, 2, 2, 0})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, 1)
-	assert.Equal(t, "widdy", hints[0])
-}
-
-func Test_generateHints_wists(t *testing.T) {
-	assert.Contains(t, testDictionary, "wists")
-	attempts := make([]Attempt, 0)
-	alphaStatusMap := make(map[string]CharacterStatus)
-	for _, r := range englishAlphabets {
-		alphaStatusMap[string(r)] = Unknown
-	}
-
-	hints := generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "arose", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "arose", []CharacterStatus{0, 0, 0, 2, 0})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "suint", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "suint", []CharacterStatus{2, 0, 2, 0, 2})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "kilts", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "kilts", []CharacterStatus{0, 3, 0, 3, 3})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "chimb", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "chimb", []CharacterStatus{0, 0, 2, 0, 0})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, maxHints)
-	assert.Equal(t, "aglow", hints[0])
-
-	recordAttempt(&alphaStatusMap, &attempts, "aglow", []CharacterStatus{0, 0, 0, 0, 2})
-	hints = generateHints(testDictionary, attempts, alphaStatusMap)
-	assert.Len(t, hints, 1)
-	assert.Equal(t, "wists", hints[0])
+func Test_generateHints(t *testing.T) {
+	assertHintingEfficiency(t, "aroma", 3)
+	assertHintingEfficiency(t, "crave", 4)
+	assertHintingEfficiency(t, "cynic", 4)
+	assertHintingEfficiency(t, "softy", 5)
+	assertHintingEfficiency(t, "widdy", 5)
+	assertHintingEfficiency(t, "wists", 6)
+	assertHintingEfficiency(t, "aardvark", 3)
 }
 
 func Test_buildCharacterFrequencyMap(t *testing.T) {
