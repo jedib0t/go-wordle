@@ -37,6 +37,36 @@ var (
 	keyboardMap   = []string{keyboardMapRow1, keyboardMapRow2, keyboardMapRow3}
 )
 
+func getAnswerLetterAndColors(w wordle.Wordle, answer string, idx int) (string, [3]text.Colors) {
+	status := "unsolved"
+
+	// if the letter was identified successfully even once, open it up
+	for _, attempt := range w.Attempts() {
+		if attempt.Answer[idx] == answer[idx] {
+			status = "solved"
+		}
+	}
+	if w.Solved() {
+		// if the game is solved, everything can be marked "successful"
+		status = "solved"
+	} else if w.GameOver() {
+		// uh oh, not solved but game over ==> failed
+		status = "failed"
+	}
+
+	letter := "?"
+	colors := colorsAnswerHidden
+	switch status {
+	case "solved":
+		letter = string(answer[idx])
+		colors = colorsAnswerSuccess
+	case "failed":
+		letter = string(answer[idx])
+		colors = colorsAnswerFailed
+	}
+	return letter, colors
+}
+
 func isGameOver(wordles []wordle.Wordle) bool {
 	for _, w := range wordles {
 		if !w.GameOver() {
@@ -96,6 +126,17 @@ func renderHints(wordles []wordle.Wordle, hints []string) string {
 	tw.Style().Options.DrawBorder = false
 	tw.Style().Options.SeparateRows = true
 	return tw.Render()
+}
+
+func renderKey(key string, colors [3]text.Colors) string {
+	colorBg1 := colors[0]
+	colorBg2 := colors[1]
+	colorLetter := colors[2]
+	return fmt.Sprintf("%s\n%s\n%s",
+		colorBg1.Sprint(strings.Repeat("▄", len(key)+2)),
+		colorBg2.Sprintf(" %s ", colorLetter.Sprint(strings.ToUpper(key))),
+		colorBg1.Sprint(strings.Repeat("▀", len(key)+2)),
+	)
 }
 
 func renderKeyboard(wordles []wordle.Wordle) string {
@@ -251,41 +292,22 @@ func renderWordleAttempt(w wordle.Wordle, attempt wordle.Attempt, isAnswer bool)
 	tw := table.NewWriter()
 	twAttemptRow := table.Row{}
 	for idx := 0; idx < *flagWordLength; idx++ {
-		var char string
+		var letter string
 		if idx < len(attempt.Answer) {
-			char = strings.ToUpper(string(attempt.Answer[idx]))
+			letter = strings.ToUpper(string(attempt.Answer[idx]))
 		} else {
-			char = " "
+			letter = " "
 		}
 		colors := colorsStatusMap[wordle.Unknown]
 		if idx < len(attempt.Result) {
 			colors = colorsStatusMap[attempt.Result[idx]]
 		}
 		if isAnswer {
-			colors = colorsAnswerHidden
-			if w.GameOver() {
-				colors = colorsAnswerFailed
-				if w.Solved() {
-					colors = colorsAnswerSuccess
-				}
-			} else {
-				char = "?"
-			}
+			letter, colors = getAnswerLetterAndColors(w, attempt.Answer, idx)
 		}
-		twAttemptRow = append(twAttemptRow, renderKey(char, colors))
+		twAttemptRow = append(twAttemptRow, renderKey(letter, colors))
 	}
 	tw.AppendRow(twAttemptRow)
 	tw.Style().Options = table.OptionsNoBordersAndSeparators
 	return tw.Render()
-}
-
-func renderKey(key string, colors [3]text.Colors) string {
-	colorBg1 := colors[0]
-	colorBg2 := colors[1]
-	colorLetter := colors[2]
-	return fmt.Sprintf("%s\n%s\n%s",
-		colorBg1.Sprint(strings.Repeat("▄", len(key)+2)),
-		colorBg2.Sprintf(" %s ", colorLetter.Sprint(key)),
-		colorBg1.Sprint(strings.Repeat("▀", len(key)+2)),
-	)
 }
