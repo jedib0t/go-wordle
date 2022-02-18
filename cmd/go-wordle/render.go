@@ -12,9 +12,9 @@ import (
 var (
 	// colors
 	colorHints          = text.Colors{text.FgHiBlack, text.Italic}
-	colorsAnswerFailed  = [3]text.Colors{{text.FgRed}, {text.BgRed}, {text.FgHiWhite}}
-	colorsAnswerHidden  = [3]text.Colors{{text.FgWhite}, {text.BgWhite}, {text.FgBlack}}
-	colorsAnswerSuccess = [3]text.Colors{{text.FgGreen}, {text.BgGreen}, {text.FgHiWhite}}
+	colorsAnswerFailed  = [3]text.Colors{{text.FgRed}, {text.BgRed}, {text.FgHiWhite, text.Bold}}
+	colorsAnswerHidden  = [3]text.Colors{{text.FgWhite}, {text.BgWhite}, {text.FgBlack, text.Bold}}
+	colorsAnswerSuccess = [3]text.Colors{{text.FgGreen}, {text.BgGreen}, {text.FgHiWhite, text.Bold}}
 	colorsSpecialKeys   = [3]text.Colors{{text.FgBlack}, {text.BgBlack}, {text.FgHiYellow}} // Enter/BkSp/etc.
 	colorsStatusMap     = map[wordle.CharacterStatus][3]text.Colors{
 		wordle.Unknown:         {{text.FgHiBlack}, {text.BgHiBlack}, {text.FgHiWhite}},

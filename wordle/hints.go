@@ -59,19 +59,19 @@ func generateHints(dictionary []string, attempts []Attempt, alphasStatusMap map[
 
 	// if there is more than one option, try narrowing it down
 	if len(words) > 1 {
+		missingLetters := findMissingLetters(words, alphasInCorrectLocation)
+		differingLetters := findDifferingLetters(words)
 		if len(alphasInCorrectLocation) >= maxWordLength75Percent && len(words) >= maxHints-1 {
 			// if most letters are in right position, but there are still a lot
 			// more words to choose from, try to make words using the missing
 			// letters (ex.: cra_e; options=crake|crane|crape|crave|craze;
 			// find words with k,n,p,t,v,z like knaps|knave)
-			missingLetters := findMissingLetters(words, alphasInCorrectLocation)
 			words = findWordsWithMostMissingLetters(dictionary, missingLetters)
-		} else if len(alphasInCorrectLocation) < maxWordLength75Percent && len(words) <= maxHints {
+		} else if len(alphasInCorrectLocation) < maxWordLength75Percent && len(differingLetters) >= maxHints-1 {
 			// if few letters are in right position, and there are only a few
 			// options to choose from, try to make words using the unique
 			// letters in all the words (ex.: _iddy; options=biddy|giddy|kiddy|widdy;
 			// find words with b,g,k,w)
-			differingLetters := findDifferingLetters(words)
 			words = findWordsWithMostMissingLetters(dictionary, differingLetters)
 		} else {
 			// build a frequency map and sort by it to eliminate most common

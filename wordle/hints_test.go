@@ -14,80 +14,59 @@ var (
 	testDictionary = testFilters.Apply(&wordsEnglish)
 )
 
-func computeStatus(answer string, word string) []CharacterStatus {
-	rsp := make([]CharacterStatus, len(answer))
-	for idx := range word {
-		if word[idx] == answer[idx] {
-			rsp[idx] = CorrectLocation
-		} else {
-			foundLetter := false
-			for wrongIdx := range answer {
-				if word[idx] == answer[wrongIdx] {
-					rsp[idx] = WrongLocation
-					foundLetter = true
-				}
-			}
-			if !foundLetter {
-				rsp[idx] = NotPresent
-			}
-		}
-	}
-	return rsp
-}
-
-func recordAttempt(alphaStatusMap *map[string]CharacterStatus, attempts *[]Attempt, answer string, result []CharacterStatus) {
-	for idx, charStatus := range result {
-		charStr := string(answer[idx])
-		switch charStatus {
-		case NotPresent:
-			delete(*alphaStatusMap, charStr)
-		case WrongLocation:
-			if (*alphaStatusMap)[charStr] != CorrectLocation {
-				(*alphaStatusMap)[charStr] = WrongLocation
-			}
-		case CorrectLocation:
-			(*alphaStatusMap)[charStr] = CorrectLocation
-		}
-	}
-	*attempts = append(*attempts, Attempt{Answer: answer, Result: result})
-}
-
-func assertHintingEfficiency(t *testing.T, answer string, expectedAttempts int) {
-	filters := Filters{
-		WithLength(len(answer)),
-	}
-	dictionary := filters.Apply(&wordsEnglish)
-
-	assert.Contains(t, dictionary, answer)
+func Test_generateHints(t *testing.T) {
+	assert.Contains(t, testDictionary, "antic")
 	attempts := make([]Attempt, 0)
 	alphaStatusMap := make(map[string]CharacterStatus)
 	for _, r := range englishAlphabets {
 		alphaStatusMap[string(r)] = Unknown
 	}
 
-	t.Logf("%s: expecting result in/under %d attempts", answer, expectedAttempts)
-	for attempt := 1; attempt <= expectedAttempts; attempt++ {
-		hints := generateHints(dictionary, attempts, alphaStatusMap)
-		if len(hints) == 0 {
-			break
-		}
-		t.Logf("%s: attempt #%d: hints[0] == '%s'", answer, attempt, hints[0])
-		if hints[0] == answer { // success
-			return
-		}
-		recordAttempt(&alphaStatusMap, &attempts, hints[0], computeStatus(answer, hints[0]))
-	}
-	t.Errorf("%s: failed after %d attempts", answer, expectedAttempts)
+	answer := "antic"
+	attempts = append(attempts, *computeAttempt(&alphaStatusMap, answer, "arise"))
+	attempts = append(attempts, *computeAttempt(&alphaStatusMap, answer, "roast"))
+	attempts = append(attempts, *computeAttempt(&alphaStatusMap, answer, "actin"))
+	hints := generateHints(testDictionary, attempts, alphaStatusMap)
+	assert.Len(t, hints, 1)
+	assert.Equal(t, answer, hints[0])
 }
 
-func Test_generateHints(t *testing.T) {
-	assertHintingEfficiency(t, "aroma", 3)
-	assertHintingEfficiency(t, "crave", 4)
-	assertHintingEfficiency(t, "cynic", 4)
-	assertHintingEfficiency(t, "softy", 5)
-	assertHintingEfficiency(t, "widdy", 5)
-	assertHintingEfficiency(t, "wists", 6)
-	assertHintingEfficiency(t, "aardvark", 3)
+func Test_generateHints_efficiency(t *testing.T) {
+	assertEfficiency := func(answer string, expectedAttempts int) {
+		filters := Filters{
+			WithLength(len(answer)),
+		}
+		dictionary := filters.Apply(&wordsEnglish)
+
+		assert.Contains(t, dictionary, answer)
+		attempts := make([]Attempt, 0)
+		alphaStatusMap := make(map[string]CharacterStatus)
+		for _, r := range englishAlphabets {
+			alphaStatusMap[string(r)] = Unknown
+		}
+
+		t.Logf("%s: expecting result in/under %d attempts", answer, expectedAttempts)
+		for attemptIdx := 1; attemptIdx <= expectedAttempts; attemptIdx++ {
+			hints := generateHints(dictionary, attempts, alphaStatusMap)
+			if len(hints) == 0 {
+				break
+			}
+			t.Logf("%s: attempt #%d: hints[0] == '%s'", answer, attemptIdx, hints[0])
+			if hints[0] == answer { // success
+				return
+			}
+			attempts = append(attempts, *computeAttempt(&alphaStatusMap, answer, hints[0]))
+		}
+		t.Errorf("%s: failed after %d attempts", answer, expectedAttempts)
+	}
+
+	assertEfficiency("aroma", 3)
+	assertEfficiency("crave", 4)
+	assertEfficiency("cynic", 4)
+	assertEfficiency("softy", 5)
+	assertEfficiency("widdy", 5)
+	assertEfficiency("wists", 6)
+	assertEfficiency("aardvark", 3)
 }
 
 func Test_buildCharacterFrequencyMap(t *testing.T) {

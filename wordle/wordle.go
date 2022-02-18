@@ -107,28 +107,7 @@ func (w *wordle) attemptKnown(word string) (*Attempt, error) {
 	if err := w.validateAttempt(word); err != nil {
 		return nil, err
 	}
-
-	// prep and compute the attempt result
-	attempt := &Attempt{Answer: word}
-	attempt.computeResult(w.answer)
-
-	// update the alphabets map
-	for idx, char := range attempt.Answer {
-		charStr := string(char)
-		status := attempt.Result[idx]
-		switch status {
-		case NotPresent:
-			if w.alphabets[charStr] == Unknown {
-				delete(w.alphabets, charStr)
-			}
-		case WrongLocation:
-			if w.alphabets[charStr] == Unknown {
-				w.alphabets[charStr] = WrongLocation
-			}
-		case CorrectLocation:
-			w.alphabets[charStr] = CorrectLocation
-		}
-	}
+	attempt := computeAttempt(&w.alphabets, w.answer, word)
 
 	// mark as solved if the answer matches
 	if attempt.Answer == w.answer {
@@ -240,4 +219,29 @@ func (w *wordle) validateAttemptUnknown(word string) error {
 		}
 	}
 	return nil
+}
+
+func computeAttempt(alphabets *map[string]CharacterStatus, answer string, word string) *Attempt {
+	// prep and compute the attempt result
+	attempt := &Attempt{Answer: word}
+	attempt.computeResult(answer)
+
+	// update the alphabets map
+	for idx, char := range attempt.Answer {
+		charStr := string(char)
+		status := attempt.Result[idx]
+		switch status {
+		case NotPresent:
+			if (*alphabets)[charStr] == Unknown {
+				(*alphabets)[charStr] = NotPresent
+			}
+		case WrongLocation:
+			if (*alphabets)[charStr] == Unknown {
+				(*alphabets)[charStr] = WrongLocation
+			}
+		case CorrectLocation:
+			(*alphabets)[charStr] = CorrectLocation
+		}
+	}
+	return attempt
 }
