@@ -9,6 +9,11 @@ import (
 // Option helps customize the Wordle game.
 type Option func(w *wordle)
 
+const (
+	defaultMaxAttempts = 5
+	defaultWordLength  = 5
+)
+
 var (
 	// wordsEnglish contains all available English words
 	wordsEnglish = words.English()
@@ -16,9 +21,9 @@ var (
 	// defaultOpts are applied before user provided options
 	defaultOpts = []Option{
 		WithDictionary(&wordsEnglish),
-		WithMaxAttempts(5),
+		WithMaxAttempts(defaultMaxAttempts),
 		WithWordFilters(
-			WithLength(5),
+			WithLength(defaultWordLength),
 		),
 	}
 )

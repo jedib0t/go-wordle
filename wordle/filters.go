@@ -33,6 +33,10 @@ type Filters []Filter
 
 // Apply returns the list of words that are allowed by all filters
 func (f Filters) Apply(words *[]string) []string {
+	if words == nil {
+		return nil
+	}
+
 	var rsp []string
 	for _, word := range *words {
 		dnq := false

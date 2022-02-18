@@ -72,11 +72,14 @@ func (w wordle) Attempts() []Attempt {
 }
 
 func (w wordle) Dictionary() []string {
+	if w.dictionary == nil {
+		return nil
+	}
 	return *w.dictionary
 }
 
 func (w wordle) DictionaryHas(word string) bool {
-	for _, dictWord := range *w.dictionary {
+	for _, dictWord := range w.Dictionary() {
 		if word == dictWord {
 			return true
 		}
@@ -169,7 +172,7 @@ func (w *wordle) init() error {
 	}
 
 	w.alphabets = make(map[string]CharacterStatus, 26)
-	for _, r := range "abcdefghijklmnopqrstuvwxyz" {
+	for _, r := range englishAlphabets {
 		w.alphabets[string(r)] = Unknown
 	}
 	if w.answer == "" && !w.answerUnknown {

@@ -9,6 +9,15 @@ import (
 	"github.com/jedib0t/go-wordle/wordle"
 )
 
+const (
+	// keyboard
+	keyboardEnter     = "ENTER"
+	keyboardBackSpace = "BKSP"
+	keyboardMapRow1   = "QWERTYUIOP"
+	keyboardMapRow2   = "ASDFGHJKL"
+	keyboardMapRow3   = "ZXCVBNM"
+)
+
 var (
 	// colors
 	colorHints          = text.Colors{text.FgHiBlack, text.Italic}
@@ -23,16 +32,9 @@ var (
 		wordle.CorrectLocation: {{text.FgHiGreen}, {text.BgHiGreen}, {text.FgBlack}},
 	}
 
-	// keyboard
-	keyboardEnter     = "ENTER"
-	keyboardBackSpace = "BKSP"
-	keyboardMapRow1   = "QWERTYUIOP"
-	keyboardMapRow2   = "ASDFGHJKL"
-	keyboardMapRow3   = "ZXCVBNM"
-	keyboardMap       = []string{keyboardMapRow1, keyboardMapRow2, keyboardMapRow3}
-
 	// misc
 	linesRendered = 0
+	keyboardMap   = []string{keyboardMapRow1, keyboardMapRow2, keyboardMapRow3}
 )
 
 func isGameOver(wordles []wordle.Wordle) bool {
@@ -71,10 +73,10 @@ func render(wordles []wordle.Wordle, hints []string, currAttempts []wordle.Attem
 }
 
 func renderHints(wordles []wordle.Wordle, hints []string) string {
+	if isGameOver(wordles) {
+		return colorHints.Sprint("- game over -")
+	}
 	if len(hints) == 0 {
-		if isGameOver(wordles) {
-			return colorHints.Sprint("- game over -")
-		}
 		return colorHints.Sprint("- no hints found -")
 	}
 
