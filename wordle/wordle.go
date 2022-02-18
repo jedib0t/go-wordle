@@ -71,6 +71,14 @@ func (w wordle) Attempts() []Attempt {
 	return w.attempts
 }
 
+func (w *wordle) DecrementMaxAttempts() bool {
+	if len(w.attempts) >= w.maxAttempts-1 || w.maxAttempts == 1 {
+		return false
+	}
+	w.maxAttempts--
+	return true
+}
+
 func (w wordle) Dictionary() []string {
 	if w.dictionary == nil {
 		return nil
@@ -96,6 +104,10 @@ func (w wordle) Hints() []string {
 		return nil
 	}
 	return generateHints(w.wordsAllowed, w.attempts, w.alphabets)
+}
+
+func (w *wordle) IncrementMaxAttempts() {
+	w.maxAttempts++
 }
 
 func (w *wordle) Reset() error {

@@ -38,11 +38,13 @@ func getUserInput(wordles []wordle.Wordle, currAttempts []wordle.Attempt, hints 
 
 	switch key {
 	case keyboard.KeyEsc, keyboard.KeyCtrlC:
-		os.Exit(0)
+		handleShortcutQuit()
+	case keyboard.KeyCtrlD:
+		handleShortcutDecrementAttempts(wordles)
+	case keyboard.KeyCtrlI:
+		handleShortcutIncrementAttempts(wordles)
 	case keyboard.KeyCtrlR:
-		for _, w := range wordles {
-			_ = w.Reset()
-		}
+		handleShortcutReset(wordles)
 	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
 		for attemptIdx := range currAttempts {
 			if len(currAttempts[attemptIdx].Answer) > 0 {
@@ -77,67 +79,66 @@ func getUserInput(wordles []wordle.Wordle, currAttempts []wordle.Attempt, hints 
 	return currAttempts, hints
 }
 
+func handleShortcutDecrementAttempts(wordles []wordle.Wordle) {
+	canDecrement := *flagMaxAttempts > 1
+	for _, w := range wordles {
+		if len(w.Attempts()) >= *flagMaxAttempts-1 {
+			canDecrement = false
+		}
+	}
+	if canDecrement {
+		*flagMaxAttempts--
+		for idx, w := range wordles {
+			if !w.DecrementMaxAttempts() {
+				logErrorAndExit("failed to decrement max attempts for Wordle[%d]", idx)
+			}
+		}
+	}
+}
+
+func handleShortcutQuit() {
+	cleanup()
+	os.Exit(0)
+}
+
+func handleShortcutReset(wordles []wordle.Wordle) {
+	for _, w := range wordles {
+		_ = w.Reset()
+	}
+}
+
+func handleShortcutIncrementAttempts(wordles []wordle.Wordle) {
+	*flagMaxAttempts++
+	for _, w := range wordles {
+		w.IncrementMaxAttempts()
+	}
+}
+
 func getUserInputCharStatus(wordles []wordle.Wordle, currAttempts []wordle.Attempt, hints []string) ([]wordle.Attempt, []string) {
 	char, key, err := keyboard.GetSingleKey()
 	if err != nil {
 		logErrorAndExit("failed to get input: %v", err)
 	}
 
-	// get the current attempt object being modified
-	getAttempt := func(direction int) (int, wordle.Attempt) {
-		switch direction {
-		case -1:
-			for idx := inputCharStatusAttemptIdx - 1; idx >= 0; idx-- {
-				if !wordles[idx].GameOver() {
-					inputCharStatusAttemptIdx = idx
-					break
-				}
-			}
-		case 0:
-			if wordles[inputCharStatusAttemptIdx].GameOver() {
-				for idx := inputCharStatusAttemptIdx + 1; idx < len(wordles); idx++ {
-					if !wordles[idx].GameOver() {
-						inputCharStatusAttemptIdx = idx
-						break
-					}
-				}
-			}
-		case 1:
-			for idx := inputCharStatusAttemptIdx + 1; idx < len(wordles); idx++ {
-				if !wordles[idx].GameOver() {
-					inputCharStatusAttemptIdx = idx
-					break
-				}
-			}
-		}
-		return inputCharStatusAttemptIdx, currAttempts[inputCharStatusAttemptIdx]
-	}
-	isAtLastUnsolvedWordle := func() bool {
-		for idx := inputCharStatusAttemptIdx + 1; idx < len(wordles); idx++ {
-			if !wordles[idx].GameOver() {
-				return false
-			}
-		}
-		return true
-	}
-	attemptIdx, currAttempt := getAttempt(0)
-
+	attemptIdx, currAttempt := getAttempt(wordles, currAttempts, 0)
 	switch key {
 	case keyboard.KeyEsc, keyboard.KeyCtrlC:
-		os.Exit(0)
+		handleShortcutQuit()
+	case keyboard.KeyCtrlD:
+		handleShortcutDecrementAttempts(wordles)
+	case keyboard.KeyCtrlI:
+		handleShortcutIncrementAttempts(wordles)
 	case keyboard.KeyCtrlR:
-		for _, w := range wordles {
-			_ = w.Reset()
-		}
+		handleShortcutReset(wordles)
 	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
 		if attemptIdx > 0 && len(currAttempt.Result) == 0 {
-			attemptIdx, currAttempt = getAttempt(-1)
+			attemptIdx, currAttempt = getAttempt(wordles, currAttempts, -1)
 		}
 		if len(currAttempt.Result) > 0 {
 			currAttempts[attemptIdx].Result = currAttempt.Result[:len(currAttempt.Result)-1]
 		}
 	case keyboard.KeyEnter:
-		if isAtLastUnsolvedWordle() && len(currAttempt.Result) == len(currAttempt.Answer) {
+		if isAtLastUnsolvedWordle(wordles) && len(currAttempt.Result) == len(currAttempt.Answer) {
 			inputCharStatus = false
 			inputCharStatusAttemptIdx = 0
 			for idx, w := range wordles {
@@ -152,7 +153,7 @@ func getUserInputCharStatus(wordles []wordle.Wordle, currAttempts []wordle.Attem
 		if char == '0' || char == '2' || char == '3' {
 			if len(currAttempt.Result) == len(currAttempt.Answer) {
 				if attemptIdx < len(wordles)-1 {
-					attemptIdx, currAttempt = getAttempt(+1)
+					attemptIdx, currAttempt = getAttempt(wordles, currAttempts, +1)
 				}
 			}
 			if len(currAttempt.Result) < len(currAttempt.Answer) {

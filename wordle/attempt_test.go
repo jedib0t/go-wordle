@@ -32,4 +32,7 @@ func Test_computeResult(t *testing.T) {
 	compareAttempt(t, "antic", "antic", []CharacterStatus{
 		CorrectLocation, CorrectLocation, CorrectLocation, CorrectLocation, CorrectLocation,
 	})
+	compareAttempt(t, "purer", "enter", []CharacterStatus{
+		NotPresent, NotPresent, NotPresent, CorrectLocation, CorrectLocation,
+	})
 }

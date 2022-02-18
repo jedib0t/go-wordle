@@ -9,6 +9,7 @@ func CombineHints(wordles ...Wordle) []string {
 	if len(wordles) == 1 {
 		return wordles[0].Hints()
 	}
+	var hints []string
 
 	// function to tell if a word has been attempted already
 	hasBeenAttempted := func(word string) bool {
@@ -21,12 +22,20 @@ func CombineHints(wordles ...Wordle) []string {
 		}
 		return false
 	}
+	// function to tell if a word is already in the hints
+	hasBeenAppended := func(word string) bool {
+		for _, hint := range hints {
+			if word == hint {
+				return true
+			}
+		}
+		return false
+	}
 
 	// else get all hints and return it after sorting by character frequency
-	var hints []string
 	for _, w := range wordles {
 		for _, hint := range w.Hints() {
-			if !hasBeenAttempted(hint) {
+			if !hasBeenAttempted(hint) && !hasBeenAppended(hint) {
 				hints = append(hints, hint)
 			}
 		}

@@ -118,6 +118,16 @@ func TestWordle_Attempts(t *testing.T) {
 	assert.Len(t, w.Attempts(), len(w.attempts))
 }
 
+func TestWordle_DecrementMaxAttempts(t *testing.T) {
+	w := wordle{attempts: make([]Attempt, 2), maxAttempts: 5}
+	assert.True(t, w.DecrementMaxAttempts())
+	assert.Equal(t, 4, w.maxAttempts)
+	assert.True(t, w.DecrementMaxAttempts())
+	assert.Equal(t, 3, w.maxAttempts)
+	assert.False(t, w.DecrementMaxAttempts())
+	assert.Equal(t, 3, w.maxAttempts)
+}
+
 func TestWordle_Dictionary(t *testing.T) {
 	w := &wordle{}
 	assert.Nil(t, w.dictionary)
@@ -167,6 +177,16 @@ func TestWordle_Hints(t *testing.T) {
 
 	w.wordsAllowed = []string{"foo", "bar", "baz", "foof", "barb", "bazz"}
 	assert.Len(t, w.Hints(), maxHints)
+}
+
+func TestWordle_IncrementMaxAttempts(t *testing.T) {
+	w := wordle{attempts: make([]Attempt, 2), maxAttempts: 3}
+	w.IncrementMaxAttempts()
+	assert.Equal(t, 4, w.maxAttempts)
+	w.IncrementMaxAttempts()
+	assert.Equal(t, 5, w.maxAttempts)
+	w.IncrementMaxAttempts()
+	assert.Equal(t, 6, w.maxAttempts)
 }
 
 func TestWordle_Reset(t *testing.T) {

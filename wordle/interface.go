@@ -7,10 +7,12 @@ type Wordle interface {
 	AnswerUnknown() bool
 	Attempt(word string, result ...CharacterStatus) (*Attempt, error)
 	Attempts() []Attempt
+	DecrementMaxAttempts() bool
 	Dictionary() []string
 	DictionaryHas(word string) bool
 	GameOver() bool
 	Hints() []string
+	IncrementMaxAttempts()
 	Reset() error
 	Solved() bool
 }

@@ -1,6 +1,8 @@
 package wordle
 
-import "strings"
+import (
+	"strings"
+)
 
 // Attempt help record a user-attempt of a word, and the results per character.
 type Attempt struct {
@@ -11,6 +13,7 @@ type Attempt struct {
 func (a *Attempt) computeResult(answer string) {
 	a.Result = make([]CharacterStatus, len(a.Answer))
 
+	// 1st phase: find letters not present and present in correct location
 	for idx, char := range a.Answer {
 		charStr := string(char)
 		if !strings.Contains(answer, charStr) {
@@ -21,8 +24,14 @@ func (a *Attempt) computeResult(answer string) {
 			a.Result[idx] = CorrectLocation
 			continue
 		}
+	}
+	// 2nd phase: find letters in wrong locations
+	for idx, char := range a.Answer {
+		charStr := string(char)
 		if a.numberOfFinds(charStr) < strings.Count(answer, charStr) {
-			a.Result[idx] = WrongLocation
+			if a.Result[idx] != CorrectLocation {
+				a.Result[idx] = WrongLocation
+			}
 		}
 	}
 }
