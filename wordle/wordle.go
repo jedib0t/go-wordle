@@ -108,31 +108,25 @@ func (w *wordle) attemptKnown(word string) (*Attempt, error) {
 		return nil, err
 	}
 
-	// prep to record a new attempt
-	attempt := &Attempt{
-		Answer: word,
-		Result: make([]CharacterStatus, len(word)),
-	}
+	// prep and compute the attempt result
+	attempt := &Attempt{Answer: word}
+	attempt.computeResult(w.answer)
 
-	// loop through the word one character at a time
-	for idx := range word {
-		if word[idx] == w.answer[idx] {
-			attempt.Result[idx] = PresentInCorrectLocation
-			w.alphabets[string(word[idx])] = PresentInCorrectLocation
-		} else {
-			charNotFound := true
-			for answerIdx := range w.answer {
-				if word[idx] == w.answer[answerIdx] {
-					attempt.Result[idx] = PresentInWrongLocation
-					if w.alphabets[string(word[idx])] == Unknown {
-						w.alphabets[string(word[idx])] = PresentInWrongLocation
-					}
-					charNotFound = false
-				}
+	// update the alphabets map
+	for idx, char := range attempt.Answer {
+		charStr := string(char)
+		status := attempt.Result[idx]
+		switch status {
+		case NotPresent:
+			if w.alphabets[charStr] == Unknown {
+				delete(w.alphabets, charStr)
 			}
-			if charNotFound {
-				delete(w.alphabets, string(word[idx]))
+		case WrongLocation:
+			if w.alphabets[charStr] == Unknown {
+				w.alphabets[charStr] = WrongLocation
 			}
+		case CorrectLocation:
+			w.alphabets[charStr] = CorrectLocation
 		}
 	}
 
@@ -166,7 +160,7 @@ func (w *wordle) attemptUnknown(word string, result []CharacterStatus) (*Attempt
 	for idx, status := range attempt.Result {
 		charStr := string(word[idx])
 		if status == NotPresent {
-			if w.alphabets[charStr] != PresentInWrongLocation && w.alphabets[charStr] != PresentInCorrectLocation {
+			if w.alphabets[charStr] != WrongLocation && w.alphabets[charStr] != CorrectLocation {
 				delete(w.alphabets, charStr)
 			}
 		}
@@ -175,7 +169,7 @@ func (w *wordle) attemptUnknown(word string, result []CharacterStatus) (*Attempt
 	// mark as solved if all characters are in right location
 	numCorrect := 0
 	for _, status := range attempt.Result {
-		if status == PresentInCorrectLocation {
+		if status == CorrectLocation {
 			numCorrect++
 		}
 	}

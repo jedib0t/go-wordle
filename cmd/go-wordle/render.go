@@ -17,10 +17,10 @@ var (
 	colorsAnswerSuccess = [3]text.Colors{{text.FgGreen}, {text.BgGreen}, {text.FgHiWhite}}
 	colorsSpecialKeys   = [3]text.Colors{{text.FgBlack}, {text.BgBlack}, {text.FgHiYellow}} // Enter/BkSp/etc.
 	colorsStatusMap     = map[wordle.CharacterStatus][3]text.Colors{
-		wordle.Unknown:                  {{text.FgHiBlack}, {text.BgHiBlack}, {text.FgHiWhite}},
-		wordle.NotPresent:               {{text.FgBlack}, {text.BgBlack}, {text.FgHiBlack}},
-		wordle.PresentInWrongLocation:   {{text.FgHiYellow}, {text.BgHiYellow}, {text.FgBlack}},
-		wordle.PresentInCorrectLocation: {{text.FgHiGreen}, {text.BgHiGreen}, {text.FgBlack}},
+		wordle.Unknown:         {{text.FgHiBlack}, {text.BgHiBlack}, {text.FgHiWhite}},
+		wordle.NotPresent:      {{text.FgBlack}, {text.BgBlack}, {text.FgHiBlack}},
+		wordle.WrongLocation:   {{text.FgHiYellow}, {text.BgHiYellow}, {text.FgBlack}},
+		wordle.CorrectLocation: {{text.FgHiGreen}, {text.BgHiGreen}, {text.FgBlack}},
 	}
 
 	// keyboard
@@ -115,8 +115,8 @@ func renderKeyboardCharacterStatus() string {
 
 	for _, legend := range []wordle.CharacterStatus{
 		wordle.NotPresent,
-		wordle.PresentInWrongLocation,
-		wordle.PresentInCorrectLocation,
+		wordle.WrongLocation,
+		wordle.CorrectLocation,
 	} {
 		colors := colorsStatusMap[legend]
 		row = append(row, renderKey(fmt.Sprint(int(legend)), colors))

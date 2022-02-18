@@ -29,10 +29,10 @@ func generateHints(dictionary []string, attempts []Attempt, alphasStatusMap map[
 			alphasUnknown[charStr] = true
 		case NotPresent:
 			alphasNotPresent[charStr] = true
-		case PresentInWrongLocation:
+		case WrongLocation:
 			alphasInWrongLocation[charStr] = true
 			alphasPresent[charStr] = true
-		case PresentInCorrectLocation:
+		case CorrectLocation:
 			alphasInCorrectLocation[charStr] = true
 			alphasPresent[charStr] = true
 		}
@@ -89,6 +89,9 @@ func generateHints(dictionary []string, attempts []Attempt, alphasStatusMap map[
 		}
 	}
 
+	// filter words that have been attempted already
+	words = filterWordsAlreadyAttempted(words, attempts)
+
 	// return the top list
 	if len(words) > maxHints {
 		return words[:maxHints]
@@ -119,14 +122,14 @@ func buildKnownCharacterLocationMap(attempts []Attempt) (map[string][]int, map[s
 	for _, attempt := range attempts {
 		for idx, char := range attempt.Answer {
 			charStr := string(char)
-			if attempt.Result[idx] == PresentInCorrectLocation {
+			if attempt.Result[idx] == CorrectLocation {
 				if correctLocationMap[charStr] == nil {
 					correctLocationMap[charStr] = make([]int, 0)
 				}
 				if !hasValue(correctLocationMap[charStr], idx) {
 					correctLocationMap[charStr] = append(correctLocationMap[charStr], idx)
 				}
-			} else if attempt.Result[idx] == PresentInWrongLocation {
+			} else if attempt.Result[idx] == WrongLocation {
 				if incorrectLocationMap[charStr] == nil {
 					incorrectLocationMap[charStr] = make([]int, 0)
 				}
@@ -168,6 +171,23 @@ func countUniqueLetters(word string) int {
 		uniqueLettersMap[string(char)] = true
 	}
 	return len(uniqueLettersMap)
+}
+
+func filterWordsAlreadyAttempted(words []string, attempts []Attempt) []string {
+	var rsp []string
+	for _, word := range words {
+		found := false
+		for _, attempt := range attempts {
+			if word == attempt.Answer {
+				found = true
+				break
+			}
+		}
+		if !found {
+			rsp = append(rsp, word)
+		}
+	}
+	return rsp
 }
 
 func filterWordsWithLettersInWrongLocations(words []string, attempts []Attempt) []string {

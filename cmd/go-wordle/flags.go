@@ -9,7 +9,7 @@ import (
 
 var (
 	// defaults
-	defaultSolveSpeed  = 3
+	defaultSolveSpeed  = 4
 	defaultMaxAttempts = 6
 	defaultNumWordles  = 1
 	defaultWordLength  = 5

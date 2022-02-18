@@ -160,9 +160,9 @@ func getUserInputCharStatus(wordles []wordle.Wordle, currAttempts []wordle.Attem
 				case '0':
 					currAttempts[attemptIdx].Result = append(currAttempt.Result, wordle.NotPresent)
 				case '2':
-					currAttempts[attemptIdx].Result = append(currAttempt.Result, wordle.PresentInWrongLocation)
+					currAttempts[attemptIdx].Result = append(currAttempt.Result, wordle.WrongLocation)
 				case '3':
-					currAttempts[attemptIdx].Result = append(currAttempt.Result, wordle.PresentInCorrectLocation)
+					currAttempts[attemptIdx].Result = append(currAttempt.Result, wordle.CorrectLocation)
 				}
 			}
 		}

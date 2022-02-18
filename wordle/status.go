@@ -8,6 +8,6 @@ type CharacterStatus int
 const (
 	NotPresent CharacterStatus = iota
 	Unknown
-	PresentInWrongLocation
-	PresentInCorrectLocation
+	WrongLocation
+	CorrectLocation
 )

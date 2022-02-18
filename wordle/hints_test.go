@@ -18,12 +18,12 @@ func computeStatus(answer string, word string) []CharacterStatus {
 	rsp := make([]CharacterStatus, len(answer))
 	for idx := range word {
 		if word[idx] == answer[idx] {
-			rsp[idx] = PresentInCorrectLocation
+			rsp[idx] = CorrectLocation
 		} else {
 			foundLetter := false
 			for wrongIdx := range answer {
 				if word[idx] == answer[wrongIdx] {
-					rsp[idx] = PresentInWrongLocation
+					rsp[idx] = WrongLocation
 					foundLetter = true
 				}
 			}
@@ -41,12 +41,12 @@ func recordAttempt(alphaStatusMap *map[string]CharacterStatus, attempts *[]Attem
 		switch charStatus {
 		case NotPresent:
 			delete(*alphaStatusMap, charStr)
-		case PresentInWrongLocation:
-			if (*alphaStatusMap)[charStr] != PresentInCorrectLocation {
-				(*alphaStatusMap)[charStr] = PresentInWrongLocation
+		case WrongLocation:
+			if (*alphaStatusMap)[charStr] != CorrectLocation {
+				(*alphaStatusMap)[charStr] = WrongLocation
 			}
-		case PresentInCorrectLocation:
-			(*alphaStatusMap)[charStr] = PresentInCorrectLocation
+		case CorrectLocation:
+			(*alphaStatusMap)[charStr] = CorrectLocation
 		}
 	}
 	*attempts = append(*attempts, Attempt{Answer: answer, Result: result})
