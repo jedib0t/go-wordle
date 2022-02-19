@@ -2,8 +2,9 @@
 
 [![Build Status](https://github.com/jedib0t/go-wordle/workflows/CI/badge.svg?branch=main)](https://github.com/jedib0t/go-wordle/actions?query=workflow%3ACI+event%3Apush+branch%3Amain)
 
-A golang implementation of the popular New York Times
-game [Wordle](https://www.nytimes.com/games/wordle/index.html).
+Play the popular New York Times
+game [Wordle](https://www.nytimes.com/games/wordle/index.html)
+in the terminal.
 
 <img src="images/solver.gif" alt="go-wordle -solve"/>
 
