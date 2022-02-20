@@ -30,6 +30,7 @@ var (
 
 	// misc
 	linesRendered = 0
+	renderedGame  = ""
 
 	// controls
 	renderEnabled = true
@@ -41,12 +42,6 @@ func render(wordles []wordle.Wordle, hints []string, currAttempts []wordle.Attem
 	defer renderMutex.Unlock()
 	if !renderEnabled {
 		return
-	}
-
-	for linesRendered > 0 {
-		fmt.Print(text.CursorUp.Sprint())
-		fmt.Print(text.EraseLine.Sprint())
-		linesRendered--
 	}
 
 	tw := table.NewWriter()
@@ -65,8 +60,18 @@ func render(wordles []wordle.Wordle, hints []string, currAttempts []wordle.Attem
 	tw.Style().Format.Footer = text.FormatDefault
 	tw.Style().Options.SeparateRows = true
 	out := tw.Render()
-	linesRendered = strings.Count(out, "\n") + 1
-	fmt.Println(out)
+
+	if out != renderedGame {
+		for linesRendered > 0 {
+			fmt.Print(text.CursorUp.Sprint())
+			fmt.Print(text.EraseLine.Sprint())
+			linesRendered--
+		}
+
+		linesRendered = strings.Count(out, "\n") + 1
+		fmt.Println(out)
+		renderedGame = out
+	}
 }
 
 func renderHints(wordles []wordle.Wordle, hints []string) string {
