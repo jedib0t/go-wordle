@@ -3,86 +3,46 @@ package main
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
 	"github.com/jedib0t/go-wordle/wordle"
 )
 
-const (
-	// keyboard
-	keyboardEnter     = "ENTER"
-	keyboardBackSpace = "BKSP"
-	keyboardMapRow1   = "QWERTYUIOP"
-	keyboardMapRow2   = "ASDFGHJKL"
-	keyboardMapRow3   = "ZXCVBNM"
-
-	titleText = "" +
-		"       ▞ ▛▀▀▀▀▀▀▀▀▀▀▀▀▀▜ ▚       \n" +
-		"░ ▒ ▓ █ ▌  W O R D L E  ▐ █ ▓ ▒ ░\n" +
-		"       ▚ ▙▄▄▄▄▄▄▄▄▄▄▄▄▄▟ ▞       "
-)
-
 var (
 	// colors
-	colorHints          = text.Colors{text.FgHiBlack, text.Italic}
-	colorTitle          = text.Colors{text.FgWhite, text.Bold}
-	colorsAnswerFailed  = [3]text.Colors{{text.FgRed}, {text.BgRed}, {text.FgHiWhite, text.Bold}}
-	colorsAnswerHidden  = [3]text.Colors{{text.FgWhite}, {text.BgWhite}, {text.FgBlack, text.Bold}}
-	colorsAnswerSuccess = [3]text.Colors{{text.FgGreen}, {text.BgGreen}, {text.FgHiWhite, text.Bold}}
-	colorsSpecialKeys   = [3]text.Colors{{text.FgBlack}, {text.BgBlack}, {text.FgHiYellow}} // Enter/BkSp/etc.
-	colorsStatusMap     = map[wordle.CharacterStatus][3]text.Colors{
+	colorHints        = text.Colors{text.FgHiBlack, text.Italic}
+	colorsSpecialKeys = [3]text.Colors{{text.FgBlack}, {text.BgBlack}, {text.FgHiYellow}} // Enter/BkSp/etc.
+	colorsStatusMap   = map[wordle.CharacterStatus][3]text.Colors{
 		wordle.Unknown:         {{text.FgHiBlack}, {text.BgHiBlack}, {text.FgHiWhite}},
 		wordle.NotPresent:      {{text.FgBlack}, {text.BgBlack}, {text.FgHiBlack}},
 		wordle.WrongLocation:   {{text.FgHiYellow}, {text.BgHiYellow}, {text.FgBlack}},
 		wordle.CorrectLocation: {{text.FgHiGreen}, {text.BgHiGreen}, {text.FgBlack}},
 	}
 
+	// keyboard
+	keyboardRows = [][]string{
+		{"q", "w", "e", "r", "t", "y", "u", "i", "o", "p"},
+		{"a", "s", "d", "f", "g", "h", "j", "k", "l"},
+		{"enter", "z", "x", "c", "v", "b", "n", "m", "bksp"},
+	}
+
 	// misc
 	linesRendered = 0
-	keyboardMap   = []string{keyboardMapRow1, keyboardMapRow2, keyboardMapRow3}
+
+	// controls
+	renderEnabled = true
+	renderMutex   = sync.Mutex{}
 )
 
-func getAnswerLetterAndColors(w wordle.Wordle, answer string, idx int) (string, [3]text.Colors) {
-	status := "unsolved"
-
-	// if the letter was identified successfully even once, open it up
-	for _, attempt := range w.Attempts() {
-		if attempt.Answer[idx] == answer[idx] {
-			status = "solved"
-		}
-	}
-	if w.Solved() {
-		// if the game is solved, everything can be marked "successful"
-		status = "solved"
-	} else if w.GameOver() {
-		// uh oh, not solved but game over ==> failed
-		status = "failed"
-	}
-
-	letter := "?"
-	colors := colorsAnswerHidden
-	switch status {
-	case "solved":
-		letter = string(answer[idx])
-		colors = colorsAnswerSuccess
-	case "failed":
-		letter = string(answer[idx])
-		colors = colorsAnswerFailed
-	}
-	return letter, colors
-}
-
-func isGameOver(wordles []wordle.Wordle) bool {
-	for _, w := range wordles {
-		if !w.GameOver() {
-			return false
-		}
-	}
-	return true
-}
-
 func render(wordles []wordle.Wordle, hints []string, currAttempts []wordle.Attempt) {
+	renderMutex.Lock()
+	defer renderMutex.Unlock()
+	if !renderEnabled {
+		return
+	}
+
 	for linesRendered > 0 {
 		fmt.Print(text.CursorUp.Sprint())
 		fmt.Print(text.EraseLine.Sprint())
@@ -138,6 +98,8 @@ func renderKey(key string, colors [3]text.Colors) string {
 	colorBg1 := colors[0]
 	colorBg2 := colors[1]
 	colorLetter := colors[2]
+	key = strings.ToUpper(key)
+
 	return fmt.Sprintf("%s\n%s\n%s",
 		colorBg1.Sprint(strings.Repeat("▄", len(key)+2)),
 		colorBg2.Sprintf(" %s ", colorLetter.Sprint(strings.ToUpper(key))),
@@ -186,16 +148,14 @@ func renderKeyboardLegend(wordles []wordle.Wordle) string {
 		alphabets = wordles[0].Alphabets()
 	} else {
 		// init map with Unknown status
-		for _, legend := range keyboardMap {
-			for _, ch := range legend {
-				char := strings.ToLower(string(ch))
+		for _, legend := range keyboardRows {
+			for _, char := range legend {
 				alphabets[char] = wordle.Unknown
 			}
 		}
 		// if any keys have same status across all Wordles, use it
-		for _, legend := range keyboardMap {
-			for _, ch := range legend {
-				char := strings.ToLower(string(ch))
+		for _, legend := range keyboardRows {
+			for _, char := range legend {
 				charStatuses := make(map[wordle.CharacterStatus]bool)
 				for _, w := range wordles {
 					charStatuses[w.Alphabets()[char]] = true
@@ -209,21 +169,17 @@ func renderKeyboardLegend(wordles []wordle.Wordle) string {
 		}
 	}
 
-	for _, legend := range keyboardMap {
+	for _, legend := range keyboardRows {
 		twRow := table.NewWriter()
 		row := table.Row{}
-		if legend == keyboardMapRow3 {
-			row = append(row, renderKey(keyboardEnter, colorsSpecialKeys))
-		}
-		for _, ch := range legend {
-			char := string(ch)
-			charStatus := alphabets[strings.ToLower(char)]
+		for _, char := range legend {
+			charStatus := alphabets[char]
 			colors := colorsStatusMap[charStatus]
+			if len(char) > 1 {
+				colors = colorsSpecialKeys
+			}
 
 			row = append(row, renderKey(char, colors))
-		}
-		if legend == keyboardMapRow3 {
-			row = append(row, renderKey(keyboardBackSpace, colorsSpecialKeys))
 		}
 		twRow.AppendRow(row)
 		twRow.Style().Options = table.OptionsNoBordersAndSeparators
@@ -241,15 +197,6 @@ func renderKeyboardShortcuts() string {
 	}
 	shortcuts = text.AlignCenter.Apply(shortcuts, 56)
 	return colorHints.Sprint(shortcuts)
-}
-
-func renderTitle() string {
-	tw := table.NewWriter()
-	for _, line := range strings.Split(titleText, "\n") {
-		tw.AppendRow(table.Row{colorTitle.Sprint(line)})
-	}
-	tw.Style().Options = table.OptionsNoBordersAndSeparators
-	return tw.Render()
 }
 
 func renderWordle(wordles []wordle.Wordle, currAttempts []wordle.Attempt) string {

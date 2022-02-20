@@ -32,6 +32,10 @@ func init() {
 }
 
 func cleanup() {
+	renderMutex.Lock()
+	defer renderMutex.Unlock() // unnecessary
+	renderEnabled = false
+
 	for _, exitHandler := range exitHandlers {
 		exitHandler()
 	}
