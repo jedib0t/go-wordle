@@ -34,20 +34,20 @@ func getUserInput(wordles []wordle.Wordle, currAttempts []wordle.Attempt, hints 
 	case keyboard.KeyCtrlR:
 		handleShortcutReset(wordles)
 	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
+		renderMutex.Lock()
 		for attemptIdx := range currAttempts {
 			if len(currAttempts[attemptIdx].Answer) > 0 {
-				renderMutex.Lock()
 				currAttempts[attemptIdx].Answer = currAttempts[attemptIdx].Answer[:len(currAttempts[attemptIdx].Answer)-1]
-				renderMutex.Unlock()
 			}
 		}
+		renderMutex.Unlock()
 	case keyboard.KeyEnter:
+		renderMutex.Lock()
 		for attemptIdx := range currAttempts {
 			if len(currAttempts[attemptIdx].Answer) == *flagWordLength {
 				if *flagHelper && len(currAttempts[attemptIdx].Result) < len(currAttempts[attemptIdx].Answer) {
 					inputCharStatus = true
 				} else {
-					renderMutex.Lock()
 					for idx, w := range wordles {
 						_, _ = w.Attempt(currAttempts[idx].Answer)
 						if idx == len(wordles)-1 {
@@ -55,20 +55,20 @@ func getUserInput(wordles []wordle.Wordle, currAttempts []wordle.Attempt, hints 
 							hints = wordle.CombineHints(wordles...)
 						}
 					}
-					renderMutex.Unlock()
 				}
 			}
 		}
+		renderMutex.Unlock()
 	default:
+		renderMutex.Lock()
 		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') {
 			for attemptIdx := range currAttempts {
 				if len(currAttempts[attemptIdx].Answer) < *flagWordLength {
-					renderMutex.Lock()
 					currAttempts[attemptIdx].Answer += strings.ToLower(string(char))
-					renderMutex.Unlock()
 				}
 			}
 		}
+		renderMutex.Unlock()
 	}
 	return currAttempts, hints
 }
@@ -90,19 +90,19 @@ func getUserInputCharStatus(wordles []wordle.Wordle, currAttempts []wordle.Attem
 	case keyboard.KeyCtrlR:
 		handleShortcutReset(wordles)
 	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
+		renderMutex.Lock()
 		if attemptIdx > 0 && len(currAttempt.Result) == 0 {
 			attemptIdx, currAttempt = getAttempt(wordles, currAttempts, -1)
 		}
 		if len(currAttempt.Result) > 0 {
-			renderMutex.Lock()
 			currAttempts[attemptIdx].Result = currAttempt.Result[:len(currAttempt.Result)-1]
-			renderMutex.Unlock()
 		}
+		renderMutex.Unlock()
 	case keyboard.KeyEnter:
+		renderMutex.Lock()
 		if isAtLastUnsolvedWordle(wordles) && len(currAttempt.Result) == len(currAttempt.Answer) {
 			inputCharStatus = false
 			inputCharStatusAttemptIdx = 0
-			renderMutex.Lock()
 			for idx, w := range wordles {
 				_, _ = w.Attempt(currAttempts[idx].Answer, currAttempts[idx].Result...)
 				if idx == len(wordles)-1 {
@@ -110,9 +110,10 @@ func getUserInputCharStatus(wordles []wordle.Wordle, currAttempts []wordle.Attem
 					hints = wordle.CombineHints(wordles...)
 				}
 			}
-			renderMutex.Unlock()
 		}
+		renderMutex.Unlock()
 	default:
+		renderMutex.Lock()
 		if char == '0' || char == '2' || char == '3' {
 			if len(currAttempt.Result) == len(currAttempt.Answer) {
 				if attemptIdx < len(wordles)-1 {
@@ -120,7 +121,6 @@ func getUserInputCharStatus(wordles []wordle.Wordle, currAttempts []wordle.Attem
 				}
 			}
 			if len(currAttempt.Result) < len(currAttempt.Answer) {
-				renderMutex.Lock()
 				switch char {
 				case '0':
 					currAttempts[attemptIdx].Result = append(currAttempt.Result, wordle.NotPresent)
@@ -129,9 +129,9 @@ func getUserInputCharStatus(wordles []wordle.Wordle, currAttempts []wordle.Attem
 				case '3':
 					currAttempts[attemptIdx].Result = append(currAttempt.Result, wordle.CorrectLocation)
 				}
-				renderMutex.Unlock()
 			}
 		}
+		renderMutex.Unlock()
 	}
 	return currAttempts, hints
 }
@@ -243,6 +243,7 @@ func play(wordles []wordle.Wordle) {
 
 func solveWithHints(wordles []wordle.Wordle, currAttempts []wordle.Attempt, hints []string) ([]wordle.Attempt, []string) {
 	if solveWordSet {
+		// wait and honor solve speed set in flags
 		time.Sleep(time.Second / time.Duration(*flagSolveSpeed))
 		// if the word is empty and moved over to the answer, attempt it
 		if solveWord == "" {

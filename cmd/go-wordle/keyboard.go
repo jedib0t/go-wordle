@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/eiannone/keyboard"
 )
@@ -36,7 +35,7 @@ func initKeyboard() {
 			_, key, _ := keyboard.GetSingleKey()
 			switch key {
 			case keyboard.KeyEsc, keyboard.KeyCtrlC:
-				os.Exit(0)
+				handleShortcutQuit()
 			}
 		}()
 	}
