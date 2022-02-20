@@ -16,20 +16,7 @@ var (
 	inputCharStatusAttemptIdx = 0
 	solveWord                 = ""
 	solveWordSet              = false
-
-	// version
-	version = "dev"
 )
-
-func main() {
-	defer cleanup()
-
-	// instantiate
-	wordles := getWordles(*flagNumWordles)
-
-	// prompt and render
-	prompt(wordles)
-}
 
 func getUserInput(wordles []wordle.Wordle, currAttempts []wordle.Attempt, hints []string) ([]wordle.Attempt, []string) {
 	char, key, err := keyboard.GetSingleKey()
@@ -190,54 +177,9 @@ func handleShortcutIncrementAttempts(wordles []wordle.Wordle) {
 	renderMutex.Unlock()
 }
 
-func getWordles(numWordles int) []wordle.Wordle {
-	var answers []string
-	if *flagAnswer != "" {
-		answers = strings.Split(*flagAnswer, ",")
-		if numWordles > 1 && len(answers) > 1 && len(answers) < numWordles {
-			logErrorAndExit("game has %d Wordles but only %d answers provided", len(answers), numWordles)
-		}
-	}
-
-	// instantiate
-	var rsp []wordle.Wordle
-	for idx := 1; idx <= numWordles; idx++ {
-		answer := ""
-		opts := getWordlesOptions()
-		if len(answers) > 0 {
-			answer = answers[idx-1]
-			opts = append(opts, wordle.WithAnswer(answer))
-		}
-
-		w, err := wordle.New(opts...)
-		if err != nil {
-			logErrorAndExit("failed to initiate new Wordle: %v, %v", err, opts)
-		}
-		if *flagSolve && answer != "" && !w.DictionaryHas(answer) {
-			logErrorAndExit("solve will fail as '%s' is not in dictionary and will never be found", answer)
-		}
-		rsp = append(rsp, w)
-	}
-	return rsp
-}
-
-func getWordlesOptions() []wordle.Option {
-	opts := []wordle.Option{
-		wordle.WithMaxAttempts(*flagMaxAttempts),
-		wordle.WithWordFilters(
-			wordle.WithLength(*flagWordLength),
-		),
-	}
-	if *flagHelper {
-		opts = append(opts, wordle.WithUnknownAnswer(*flagWordLength))
-	}
-	return opts
-}
-
-func prompt(wordles []wordle.Wordle) {
+func play(wordles []wordle.Wordle) {
 	cliAttempts := strings.Split(*flagAttempts, ",")
 	currAttempts := make([]wordle.Attempt, len(wordles))
-	solveWord = ""
 	hints := wordle.CombineHints(wordles...)
 
 	// render forever in a separate routine

@@ -61,6 +61,7 @@ func render(wordles []wordle.Wordle, hints []string, currAttempts []wordle.Attem
 		{Number: 1, Align: text.AlignCenter, AlignHeader: text.AlignCenter, AlignFooter: text.AlignCenter},
 	})
 	tw.SetStyle(table.StyleBold)
+	tw.Style().Format.Header = text.FormatDefault
 	tw.Style().Format.Footer = text.FormatDefault
 	tw.Style().Options.SeparateRows = true
 	out := tw.Render()
