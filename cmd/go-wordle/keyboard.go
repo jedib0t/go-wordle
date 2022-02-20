@@ -35,7 +35,7 @@ func initKeyboard() {
 			_, key, _ := keyboard.GetSingleKey()
 			switch key {
 			case keyboard.KeyEsc, keyboard.KeyCtrlC:
-				handleShortcutQuit()
+				handleActionQuit()
 			}
 		}()
 	}

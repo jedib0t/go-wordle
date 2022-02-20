@@ -56,9 +56,7 @@ func logErrorAndExit(msg string, a ...interface{}) {
 func main() {
 	defer cleanup()
 
-	// instantiate
-	wordles := generateWordles(*flagNumWordles)
+	generateWordles(*flagNumWordles)
 
-	// play
-	play(wordles)
+	play()
 }

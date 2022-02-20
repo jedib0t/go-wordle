@@ -8,7 +8,7 @@ import (
 
 // generateWordles returns a list of wordle.Wordle games with customizations
 // defined by flags.
-func generateWordles(numWordles int) []wordle.Wordle {
+func generateWordles(numWordles int) {
 	var answers []string
 	if *flagAnswer != "" {
 		answers = strings.Split(*flagAnswer, ",")
@@ -18,7 +18,7 @@ func generateWordles(numWordles int) []wordle.Wordle {
 	}
 
 	// instantiate
-	var rsp []wordle.Wordle
+	wordles = make([]wordle.Wordle, numWordles)
 	for idx := 1; idx <= numWordles; idx++ {
 		answer := ""
 		opts := generateWordlesOptions()
@@ -34,9 +34,8 @@ func generateWordles(numWordles int) []wordle.Wordle {
 		if *flagSolve && answer != "" && !w.DictionaryHas(answer) {
 			logErrorAndExit("solve will fail as '%s' is not in dictionary and will never be found", answer)
 		}
-		rsp = append(rsp, w)
+		wordles[idx-1] = w
 	}
-	return rsp
 }
 
 // generateWordlesOptions returns a list of wordle.Option to construct a Wordle
@@ -56,7 +55,7 @@ func generateWordlesOptions() []wordle.Option {
 
 // getAttempt returns the current attempt object being modified. This is more
 // specifically needed to move between multiple wordles in mega-wordles mode.
-func getAttempt(wordles []wordle.Wordle, currAttempts []wordle.Attempt, direction int) (int, wordle.Attempt) {
+func getAttempt(direction int) (int, wordle.Attempt) {
 	switch direction {
 	case -1:
 		for idx := inputCharStatusAttemptIdx - 1; idx >= 0; idx-- {

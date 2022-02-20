@@ -9,14 +9,14 @@ import (
 
 var (
 	// defaults
-	defaultSolveSpeed  = 3
+	defaultSolveSpeed  = 4
 	defaultMaxAttempts = 6
 	defaultNumWordles  = 1
 	defaultWordLength  = 5
 
 	// min-max
 	solveSpeedMin = 1
-	solveSpeedMax = 5
+	solveSpeedMax = 10
 
 	// flags
 	flagAnswer      = flag.String("answer", "", "Pre-set answer if you don't want a random word")
@@ -27,7 +27,7 @@ var (
 	flagMaxAttempts = flag.Int("max-attempts", defaultMaxAttempts, "Maximum attempts allowed")
 	flagNumWordles  = flag.Int("num-wordles", defaultNumWordles, "Number of Wordle Puzzles")
 	flagSolve       = flag.Bool("solve", false, "Solve the puzzle?")
-	flagSolveSpeed  = flag.Int("solve-speed", defaultSolveSpeed, "Speed of 'solve' (1-5, 5 being fastest)")
+	flagSolveSpeed  = flag.Int("solve-speed", defaultSolveSpeed, "Speed of 'solve' (1-10, 10 being fastest)")
 	flagWordLength  = flag.Int("word-length", defaultWordLength, "Number of characters in the Word")
 )
 

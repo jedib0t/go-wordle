@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"strings"
 	"sync"
 	"time"
@@ -16,9 +15,14 @@ var (
 	inputCharStatusAttemptIdx = 0
 	solveWord                 = ""
 	solveWordSet              = false
+
+	// game state
+	wordles      []wordle.Wordle
+	currAttempts []wordle.Attempt
+	hints        []string
 )
 
-func getUserInput(wordles []wordle.Wordle, currAttempts []wordle.Attempt, hints []string) ([]wordle.Attempt, []string) {
+func getUserInput() {
 	char, key, err := keyboard.GetSingleKey()
 	if err != nil {
 		logErrorAndExit("failed to get input: %v", err)
@@ -26,179 +30,40 @@ func getUserInput(wordles []wordle.Wordle, currAttempts []wordle.Attempt, hints 
 
 	switch key {
 	case keyboard.KeyEsc, keyboard.KeyCtrlC:
-		handleShortcutQuit()
+		handleActionQuit()
 	case keyboard.KeyCtrlD:
-		handleShortcutDecrementAttempts(wordles)
+		handleActionDecrementAttempts()
 	case keyboard.KeyCtrlI:
-		handleShortcutIncrementAttempts(wordles)
+		handleActionIncrementAttempts()
 	case keyboard.KeyCtrlR:
-		handleShortcutReset(wordles)
+		handleActionReset()
 	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
-		renderMutex.Lock()
-		for attemptIdx := range currAttempts {
-			if len(currAttempts[attemptIdx].Answer) > 0 {
-				currAttempts[attemptIdx].Answer = currAttempts[attemptIdx].Answer[:len(currAttempts[attemptIdx].Answer)-1]
-			}
-		}
-		renderMutex.Unlock()
+		handleActionBackSpace()
 	case keyboard.KeyEnter:
-		renderMutex.Lock()
-		for attemptIdx := range currAttempts {
-			if len(currAttempts[attemptIdx].Answer) == *flagWordLength {
-				if *flagHelper && len(currAttempts[attemptIdx].Result) < len(currAttempts[attemptIdx].Answer) {
-					inputCharStatus = true
-				} else {
-					for idx, w := range wordles {
-						_, _ = w.Attempt(currAttempts[idx].Answer)
-						if idx == len(wordles)-1 {
-							currAttempts = make([]wordle.Attempt, len(wordles))
-							hints = wordle.CombineHints(wordles...)
-						}
-					}
-				}
-			}
+		if inputCharStatus {
+			handleActionAttemptStatus()
+		} else {
+			handleActionAttempt()
 		}
-		renderMutex.Unlock()
 	default:
-		renderMutex.Lock()
-		if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') {
-			for attemptIdx := range currAttempts {
-				if len(currAttempts[attemptIdx].Answer) < *flagWordLength {
-					currAttempts[attemptIdx].Answer += strings.ToLower(string(char))
-				}
-			}
+		if inputCharStatus {
+			handleActionInputStatus(char)
+		} else {
+			handleActionInput(char)
 		}
-		renderMutex.Unlock()
-	}
-	return currAttempts, hints
-}
-
-func getUserInputCharStatus(wordles []wordle.Wordle, currAttempts []wordle.Attempt, hints []string) ([]wordle.Attempt, []string) {
-	char, key, err := keyboard.GetSingleKey()
-	if err != nil {
-		logErrorAndExit("failed to get input: %v", err)
-	}
-
-	attemptIdx, currAttempt := getAttempt(wordles, currAttempts, 0)
-	switch key {
-	case keyboard.KeyEsc, keyboard.KeyCtrlC:
-		handleShortcutQuit()
-	case keyboard.KeyCtrlD:
-		handleShortcutDecrementAttempts(wordles)
-	case keyboard.KeyCtrlI:
-		handleShortcutIncrementAttempts(wordles)
-	case keyboard.KeyCtrlR:
-		handleShortcutReset(wordles)
-	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
-		renderMutex.Lock()
-		if attemptIdx > 0 && len(currAttempt.Result) == 0 {
-			attemptIdx, currAttempt = getAttempt(wordles, currAttempts, -1)
-		}
-		if len(currAttempt.Result) > 0 {
-			currAttempts[attemptIdx].Result = currAttempt.Result[:len(currAttempt.Result)-1]
-		}
-		renderMutex.Unlock()
-	case keyboard.KeyEnter:
-		renderMutex.Lock()
-		if isAtLastUnsolvedWordle(wordles) && len(currAttempt.Result) == len(currAttempt.Answer) {
-			inputCharStatus = false
-			inputCharStatusAttemptIdx = 0
-			for idx, w := range wordles {
-				_, _ = w.Attempt(currAttempts[idx].Answer, currAttempts[idx].Result...)
-				if idx == len(wordles)-1 {
-					currAttempts = make([]wordle.Attempt, len(wordles))
-					hints = wordle.CombineHints(wordles...)
-				}
-			}
-		}
-		renderMutex.Unlock()
-	default:
-		renderMutex.Lock()
-		if char == '0' || char == '2' || char == '3' {
-			if len(currAttempt.Result) == len(currAttempt.Answer) {
-				if attemptIdx < len(wordles)-1 {
-					attemptIdx, currAttempt = getAttempt(wordles, currAttempts, +1)
-				}
-			}
-			if len(currAttempt.Result) < len(currAttempt.Answer) {
-				switch char {
-				case '0':
-					currAttempts[attemptIdx].Result = append(currAttempt.Result, wordle.NotPresent)
-				case '2':
-					currAttempts[attemptIdx].Result = append(currAttempt.Result, wordle.WrongLocation)
-				case '3':
-					currAttempts[attemptIdx].Result = append(currAttempt.Result, wordle.CorrectLocation)
-				}
-			}
-		}
-		renderMutex.Unlock()
-	}
-	return currAttempts, hints
-}
-
-func handleShortcutDecrementAttempts(wordles []wordle.Wordle) {
-	canDecrement := *flagMaxAttempts > 1
-	for _, w := range wordles {
-		if len(w.Attempts()) >= *flagMaxAttempts-1 {
-			canDecrement = false
-		}
-	}
-	if canDecrement {
-		renderMutex.Lock()
-		*flagMaxAttempts--
-		for idx, w := range wordles {
-			if !w.DecrementMaxAttempts() {
-				logErrorAndExit("failed to decrement max attempts for Wordle[%d]", idx)
-			}
-		}
-		renderMutex.Unlock()
 	}
 }
 
-func handleShortcutQuit() {
-	cleanup()
-	os.Exit(0)
-}
-
-func handleShortcutReset(wordles []wordle.Wordle) {
-	renderMutex.Lock()
-	for _, w := range wordles {
-		_ = w.Reset()
-	}
-	renderMutex.Unlock()
-}
-
-func handleShortcutIncrementAttempts(wordles []wordle.Wordle) {
-	renderMutex.Lock()
-	*flagMaxAttempts++
-	for _, w := range wordles {
-		w.IncrementMaxAttempts()
-	}
-	renderMutex.Unlock()
-}
-
-func play(wordles []wordle.Wordle) {
+func play() {
 	cliAttempts := strings.Split(*flagAttempts, ",")
-	currAttempts := make([]wordle.Attempt, len(wordles))
-	hints := wordle.CombineHints(wordles...)
+	currAttempts = make([]wordle.Attempt, len(wordles))
+	hints = wordle.CombineHints(wordles...)
 
 	// render forever in a separate routine
 	chStop := make(chan bool, 1)
 	wg := sync.WaitGroup{}
 	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		timer := time.Tick(time.Second / 10)
-		for {
-			select {
-			case <-chStop: // render one final time and return
-				render(wordles, hints, currAttempts)
-				return
-			case <-timer: // render as part of regular cycle
-				render(wordles, hints, currAttempts)
-			}
-		}
-	}()
+	go renderAsync(chStop, &wg)
 
 	// loop until game is over
 	for {
@@ -212,11 +77,13 @@ func play(wordles []wordle.Wordle) {
 
 			// if user provided words to attempt, do that first
 			if len(cliAttempts) > 0 {
+				renderMutex.Lock()
 				_, _ = w.Attempt(cliAttempts[0])
 				if idx == len(wordles)-1 { // last wordle
 					cliAttempts = cliAttempts[1:]
 					hints = wordle.CombineHints(wordles...)
 				}
+				renderMutex.Unlock()
 				continue
 			}
 		}
@@ -229,11 +96,9 @@ func play(wordles []wordle.Wordle) {
 
 		// prompt the user for input
 		if *flagSolve {
-			currAttempts, hints = solveWithHints(wordles, currAttempts, hints)
-		} else if *flagHelper && inputCharStatus {
-			currAttempts, hints = getUserInputCharStatus(wordles, currAttempts, hints)
+			solve()
 		} else {
-			currAttempts, hints = getUserInput(wordles, currAttempts, hints)
+			getUserInput()
 		}
 	}
 
@@ -241,17 +106,35 @@ func play(wordles []wordle.Wordle) {
 	wg.Wait()
 }
 
-func solveWithHints(wordles []wordle.Wordle, currAttempts []wordle.Attempt, hints []string) ([]wordle.Attempt, []string) {
+func renderAsync(chStop chan bool, wg *sync.WaitGroup) {
+	defer wg.Done()
+	timer := time.Tick(time.Second / 10)
+	for {
+		select {
+		case <-chStop: // render one final time and return
+			render(wordles, hints, currAttempts)
+			return
+		case <-timer: // render as part of regular cycle
+			render(wordles, hints, currAttempts)
+		}
+	}
+}
+
+func solve() {
 	if solveWordSet {
 		// wait and honor solve speed set in flags
 		time.Sleep(time.Second / time.Duration(*flagSolveSpeed))
 		// if the word is empty and moved over to the answer, attempt it
 		if solveWord == "" {
-			solveWordSet = false
+			renderMutex.Lock()
 			for idx, w := range wordles {
 				_, _ = w.Attempt(currAttempts[idx].Answer)
 			}
-			return make([]wordle.Attempt, len(wordles)), wordle.CombineHints(wordles...)
+			currAttempts = make([]wordle.Attempt, len(wordles))
+			hints = wordle.CombineHints(wordles...)
+			renderMutex.Unlock()
+			solveWordSet = false
+			return
 		}
 	}
 	if solveWord == "" {
@@ -263,10 +146,11 @@ func solveWithHints(wordles []wordle.Wordle, currAttempts []wordle.Attempt, hint
 	}
 	if len(solveWord) > 0 {
 		// move one letter over to the answer
+		renderMutex.Lock()
 		for idx := range currAttempts {
 			currAttempts[idx].Answer += string(solveWord[0])
 		}
 		solveWord = solveWord[1:]
+		renderMutex.Unlock()
 	}
-	return currAttempts, hints
 }
