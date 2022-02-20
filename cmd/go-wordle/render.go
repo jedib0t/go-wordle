@@ -16,11 +16,17 @@ const (
 	keyboardMapRow1   = "QWERTYUIOP"
 	keyboardMapRow2   = "ASDFGHJKL"
 	keyboardMapRow3   = "ZXCVBNM"
+
+	titleText = "" +
+		"       ▞ ▛▀▀▀▀▀▀▀▀▀▀▀▀▀▜ ▚       \n" +
+		"░ ▒ ▓ █ ▌  W O R D L E  ▐ █ ▓ ▒ ░\n" +
+		"       ▚ ▙▄▄▄▄▄▄▄▄▄▄▄▄▄▟ ▞       "
 )
 
 var (
 	// colors
 	colorHints          = text.Colors{text.FgHiBlack, text.Italic}
+	colorTitle          = text.Colors{text.FgWhite, text.Bold}
 	colorsAnswerFailed  = [3]text.Colors{{text.FgRed}, {text.BgRed}, {text.FgHiWhite, text.Bold}}
 	colorsAnswerHidden  = [3]text.Colors{{text.FgWhite}, {text.BgWhite}, {text.FgBlack, text.Bold}}
 	colorsAnswerSuccess = [3]text.Colors{{text.FgGreen}, {text.BgGreen}, {text.FgHiWhite, text.Bold}}
@@ -238,12 +244,10 @@ func renderKeyboardShortcuts() string {
 }
 
 func renderTitle() string {
-	colors := text.Colors{text.FgHiWhite}
-
 	tw := table.NewWriter()
-	tw.AppendRow(table.Row{colors.Sprint("       ▞ ▛▀▀▀▀▀▀▀▀▀▀▀▀▀▜ ▚       ")})
-	tw.AppendRow(table.Row{colors.Sprint("░ ▒ ▓ █ ▌  W O R D L E  ▐ █ ▓ ▒ ░")})
-	tw.AppendRow(table.Row{colors.Sprint("       ▚ ▙▄▄▄▄▄▄▄▄▄▄▄▄▄▟ ▞       ")})
+	for _, line := range strings.Split(titleText, "\n") {
+		tw.AppendRow(table.Row{colorTitle.Sprint(line)})
+	}
 	tw.Style().Options = table.OptionsNoBordersAndSeparators
 	return tw.Render()
 }
