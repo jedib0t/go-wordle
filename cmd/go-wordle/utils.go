@@ -11,6 +11,8 @@ var (
 	colorsAnswerSuccess = [3]text.Colors{{text.FgGreen}, {text.BgGreen}, {text.FgHiWhite, text.Bold}}
 )
 
+// getAnswerLetterAndColors returns the character and colors to be used to
+// render a single letter.
 func getAnswerLetterAndColors(w wordle.Wordle, answer string, idx int) (string, [3]text.Colors) {
 	status := "unsolved"
 
@@ -41,6 +43,7 @@ func getAnswerLetterAndColors(w wordle.Wordle, answer string, idx int) (string, 
 	return letter, colors
 }
 
+// isGameOver returns true if all Wordles are done.
 func isGameOver(wordles []wordle.Wordle) bool {
 	for _, w := range wordles {
 		if !w.GameOver() {
