@@ -26,6 +26,7 @@ var (
 	flagHints       = flag.Bool("hints", false, "Show hints and help solve?")
 	flagMaxAttempts = flag.Int("max-attempts", defaultMaxAttempts, "Maximum attempts allowed")
 	flagNumWordles  = flag.Int("num-wordles", defaultNumWordles, "Number of Wordle Puzzles")
+	flagRefreshRate = flag.Int("refresh-rate", 10, "Refresh Rate in Hz")
 	flagSolve       = flag.Bool("solve", false, "Solve the puzzle?")
 	flagSolveSpeed  = flag.Int("solve-speed", defaultSolveSpeed, "Speed of 'solve' (1-10, 10 being fastest)")
 	flagWordLength  = flag.Int("word-length", defaultWordLength, "Number of characters in the Word")
