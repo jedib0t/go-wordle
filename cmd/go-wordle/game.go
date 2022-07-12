@@ -108,7 +108,7 @@ func play() {
 
 func renderAsync(chStop chan bool, wg *sync.WaitGroup) {
 	defer wg.Done()
-	timer := time.Tick(time.Second / 10)
+	timer := time.Tick(time.Second / time.Duration(*flagRefreshRate))
 	for {
 		select {
 		case <-chStop: // render one final time and return

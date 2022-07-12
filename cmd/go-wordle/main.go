@@ -24,7 +24,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 
 	// cleanup on termination
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 5)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 	go func() {
 		<-c
