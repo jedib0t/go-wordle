@@ -1,9 +1,10 @@
-package main
+package game
 
 import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -36,6 +37,20 @@ var (
 	renderEnabled = true
 	renderMutex   = sync.Mutex{}
 )
+
+func renderAsync(chStop chan bool, wg *sync.WaitGroup) {
+	defer wg.Done()
+	timer := time.Tick(time.Second / time.Duration(*flagRefreshRate))
+	for {
+		select {
+		case <-chStop: // render one final time and return
+			render(wordles, hints, currAttempts)
+			return
+		case <-timer: // render as part of regular cycle
+			render(wordles, hints, currAttempts)
+		}
+	}
+}
 
 func render(wordles []wordle.Wordle, hints []string, currAttempts []wordle.Attempt) {
 	renderMutex.Lock()
@@ -197,9 +212,9 @@ func renderKeyboardLegend(wordles []wordle.Wordle) string {
 }
 
 func renderKeyboardShortcuts() string {
-	shortcuts := "escape/ctrl+c to quit; ctrl+r to restart"
+	shortcuts := "quit: <ESC>/<Ctrl+C> | restart: <Ctrl+R>"
 	if *flagSolve {
-		shortcuts = "escape/ctrl+c to quit"
+		shortcuts = "quit: <ESC>/<Ctrl+C>"
 	}
 	shortcuts = text.AlignCenter.Apply(shortcuts, 56)
 	return colorHints.Sprint(shortcuts)

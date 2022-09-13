@@ -1,4 +1,4 @@
-package main
+package game
 
 import (
 	"strings"
@@ -22,39 +22,10 @@ var (
 	hints        []string
 )
 
-func getUserInput() {
-	char, key, err := keyboard.GetSingleKey()
-	if err != nil {
-		logErrorAndExit("failed to get input: %v", err)
-	}
-
-	switch key {
-	case keyboard.KeyEsc, keyboard.KeyCtrlC:
-		handleActionQuit()
-	case keyboard.KeyCtrlD:
-		handleActionDecrementAttempts()
-	case keyboard.KeyCtrlI:
-		handleActionIncrementAttempts()
-	case keyboard.KeyCtrlR:
-		handleActionReset()
-	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
-		handleActionBackSpace()
-	case keyboard.KeyEnter:
-		if inputCharStatus {
-			handleActionAttemptStatus()
-		} else {
-			handleActionAttempt()
-		}
-	default:
-		if inputCharStatus {
-			handleActionInputStatus(char)
-		} else {
-			handleActionInput(char)
-		}
-	}
-}
-
-func play() {
+// Play starts the game.
+func Play() {
+	defer cleanup()
+	generateWordles(*flagNumWordles)
 	cliAttempts := strings.Split(*flagAttempts, ",")
 	currAttempts = make([]wordle.Attempt, len(wordles))
 	hints = wordle.CombineHints(wordles...)
@@ -106,16 +77,34 @@ func play() {
 	wg.Wait()
 }
 
-func renderAsync(chStop chan bool, wg *sync.WaitGroup) {
-	defer wg.Done()
-	timer := time.Tick(time.Second / time.Duration(*flagRefreshRate))
-	for {
-		select {
-		case <-chStop: // render one final time and return
-			render(wordles, hints, currAttempts)
-			return
-		case <-timer: // render as part of regular cycle
-			render(wordles, hints, currAttempts)
+func getUserInput() {
+	char, key, err := keyboard.GetSingleKey()
+	if err != nil {
+		logErrorAndExit("failed to get input: %v", err)
+	}
+
+	switch key {
+	case keyboard.KeyEsc, keyboard.KeyCtrlC:
+		handleActionQuit()
+	case keyboard.KeyCtrlD:
+		handleActionDecrementAttempts()
+	case keyboard.KeyCtrlI:
+		handleActionIncrementAttempts()
+	case keyboard.KeyCtrlR:
+		handleActionReset()
+	case keyboard.KeyBackspace, keyboard.KeyBackspace2:
+		handleActionBackSpace()
+	case keyboard.KeyEnter:
+		if inputCharStatus {
+			handleActionAttemptStatus()
+		} else {
+			handleActionAttempt()
+		}
+	default:
+		if inputCharStatus {
+			handleActionInputStatus(char)
+		} else {
+			handleActionInput(char)
 		}
 	}
 }
