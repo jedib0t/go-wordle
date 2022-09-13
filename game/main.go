@@ -1,11 +1,9 @@
-package main
+package game
 
 import (
-	"fmt"
 	"math/rand"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -45,18 +43,4 @@ func cleanup() {
 	for _, exitHandler := range exitHandlers {
 		exitHandler()
 	}
-}
-
-func logErrorAndExit(msg string, a ...interface{}) {
-	_, _ = fmt.Fprintf(os.Stderr, "ERROR: "+strings.TrimSpace(msg)+"\n", a...)
-	cleanup()
-	os.Exit(-1)
-}
-
-func main() {
-	defer cleanup()
-
-	generateWordles(*flagNumWordles)
-
-	play()
 }

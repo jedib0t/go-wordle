@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
-	github.com/jedib0t/go-pretty/v6 v6.3.3
+	github.com/jedib0t/go-pretty/v6 v6.3.8
 	github.com/stretchr/testify v1.7.4
 )
 

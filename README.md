@@ -18,7 +18,7 @@ page.
 
 If you want to build your own using GoLang:
 
-* `go get -u github.com/jedib0t/go-wordle/cmd/go-wordle`
+* `go install github.com/jedib0t/go-wordle`
 * `go-wordle`
 
 If you want to run from source:
